@@ -60,21 +60,21 @@ def getIncomesByUser(username):
     '''
 
 # ABM EGRESOS
-def insertExpenses(income):
+def insertExpenses(expenses):
     '''
         Este método recibe un egreso, se asegura que sea un egreso válido
         y lo inserta en la lista de egresos
     '''
     pass
 
-def updateExpenses(income):
+def updateExpenses(expenses):
     '''
     Este método recibe un egreso, se asegura que sea un egreso válido y que exista en la lista de egresos
     reemplaza el ingreso anterior con el nuevo
     '''
     pass
 
-def deleteExpenses(incomeId):
+def deleteExpenses(expensesId):
     '''
     Este método recibe el id de un egreso, se asegura que exista en la lista de egreso
     elimina el egreso correspondiente al id
