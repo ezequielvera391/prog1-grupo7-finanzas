@@ -89,7 +89,7 @@ git push --set-upstream origin everarod-abm-ingresos
 git push
 ```
 
-**Imagen sugerida**: VS Code mostrando la opción de sincronizar cambios con el remoto.
+![Git push](/assets-doc/image-4.png)
 
 ---
 
@@ -108,17 +108,15 @@ git push
 4. Poné un título claro.
 5. Crear PR.
 
-**Imagen sugerida**: captura de GitHub mostrando la creación de un PR.
+![Abrir Pull Request](/assets-doc/image-5.png)
+![Github - pantalla de apertura de Pull Request](/assets-doc/image-6.png)
 
 ### 4.2. Revisión y merge
 
-* Este punto aplica **solo si te hacen comentarios** sobre tu desarrollo.
+* Este punto aplica **solo si te hacen comentarios** sobre tu desarrollo y te piden correcciones.
 * Corregí en tu código, hacé nuevos commits y pushealos: el PR se actualiza automáticamente.
 * Cuando esté aprobado, se hace merge a `master` desde la web.
 * Luego borrá tu rama (GitHub muestra el botón) y actualizá tu `master` local.
-
-**Imagen sugerida**: captura de GitHub con el botón de “Merge” y “Delete branch”.
-
 ---
 
 ## 5) Problemas comunes y cómo resolverlos
