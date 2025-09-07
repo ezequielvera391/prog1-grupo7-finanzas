@@ -1,9 +1,6 @@
-# Gitflow del Proyecto – Guía práctica para el equipo (versión simple)
+# Gitflow del Proyecto – Guía práctica para el equipo
 
 > **Propósito**: establecer un proceso claro y repetible para colaborar con Git. La idea es que **nadie trabaje sobre `master`** y que cada feature se desarrolle en una rama propia y se integre mediante Pull Requests (PR).
-
-**Imagen sugerida**: un diagrama simple mostrando `master` en el centro y ramas de feature que salen y vuelven con un PR.
-
 ---
 
 ## 1) Conceptos clave
