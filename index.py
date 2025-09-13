@@ -28,36 +28,57 @@ users = [
 # - fecha: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
 # - usuario: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "monto": 1800.0, "categoria": "Otros", "fecha": "08/06/2025", "usuario": "admin" }
+import random
 
 incomes = []
 expenses = []
 
 # ABM INGRESOS
-def insert(income):
+def insertIncome(income):
     '''
     Este método recibe un ingreso, se asegura que sea un ingreso válido
     y lo inserta en la lista de ingresos
     '''
-    pass
+    if income.get("monto") <= 0:
+        return False
+    
+    incomes.append(income)
+    return True
+
 
 def updateIncome(income):
     '''
     Este método recibe un ingreso, se asegura que sea un ingreso válido y que exista en la lista de ingresos
     reemplaza el ingreso anterior con el nuevo
     '''
-    pass
+    for i in range(len(incomes)):
+        if incomes[i].get("id") == income.get("id"):
+            incomes[i] = income
+            return True
+    return False
 
-def deleteIncome(incomeId):
+def deleteIncome(income):
     '''
     Este método recibe el id de un ingreso, se asegura que exista en la lista de ingresos
     elimina el ingreso correspondiente al id
     '''
-    pass
+    for i in range(len(incomes)):
+        if incomes[i].get("id") == income.get("id"):
+            incomes.pop(i)
+            return True
+    return False
+    
 
 def getIncomesByUser(username):
     '''
     Este método recibe el nombre de un usuario y busca en la lista todos los incomes que hayan sido ingresados por ese usuario
     '''
+    found_incomes = []
+    for income in incomes:
+        if income.get("usuario") == username:
+            found_incomes.append(income)
+    return found_incomes
+
 
 # ABM EGRESOS
 def insertExpenses(expenses):
