@@ -116,13 +116,28 @@ def login(username, password):
     - crear método auxiliar para buscar un usuario
     '''
 
+    login_exitoso=False 
+    for user in users:
+        if user["username"]== username and user["password"]==password:
+         login_exitoso= True
+            
+    if login_exitoso:
+        print("resultado: Auteticacion exitosa")
+    else:
+        print("-1")
+
+
 def getUser(username):
     '''
     Este método recibe un nombre de usuario y busca en la lista de usuarios si existe este usuario
     devuelve -1 en caso de no encontrarlo
     '''
+    for user in users:
+        if user["username"] == username:
+            return user
+    return -1
 
-# MENÚ E INTERACCIÓN CON EL USUARIO
+
 
 
 def main():
