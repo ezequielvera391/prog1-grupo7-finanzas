@@ -81,31 +81,49 @@ def getIncomesByUser(username):
 
 
 # ABM EGRESOS
-def insertExpenses(expenses):
+def insertExpenses(expense):
     '''
         Este método recibe un egreso, se asegura que sea un egreso válido
         y lo inserta en la lista de egresos
     '''
-    pass
+    if expense.get("monto") <= 0:
+        return False
+    
+    expenses.append(expense)
+    return True
+    
 
-def updateExpenses(expenses):
+def updateExpenses(expense):
     '''
     Este método recibe un egreso, se asegura que sea un egreso válido y que exista en la lista de egresos
-    reemplaza el ingreso anterior con el nuevo
+    reemplaza el egreso anterior con el nuevo
     '''
-    pass
+    for i in range(len(expenses)):
+        if expenses[i].get("id") == expense.get("id"):
+            expenses[i] = expense
+            return True
+    return False
 
-def deleteExpenses(expensesId):
+def deleteExpenses(expense):
     '''
     Este método recibe el id de un egreso, se asegura que exista en la lista de egreso
     elimina el egreso correspondiente al id
     '''
-    pass
+    for i in range(len(expenses)):
+        if expenses[i].get("id") == expense.get("id"):
+            expenses.pop(i)
+            return True
+    return False
 
 def getExpensesByUser(username):
     '''
     Este método recibe el nombre de un usuario y busca en la lista todos los egresos que hayan sido ingresados por ese usuario
     '''
+    found_expenses = []
+    for expense in expenses:
+        if expense.get("usuario") == username:
+            found_expenses.append(expense)
+    return found_expenses
 
 # AUTH
 def login(username, password):
@@ -145,6 +163,18 @@ def main():
     Función principal del programa
     '''
     print("Sin implementar...")
+
+    
+    """
+    # Prueba
+    expense = {
+        "id":"1", 
+        "monto": 2222, 
+        "categoria": "comida", 
+        "fecha": 11/10/2004, 
+        "usuario": "O010000"  
+    }
+    """
 
 #### INICIO DE PROGRAMA
 main()
