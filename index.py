@@ -34,7 +34,7 @@ incomes = []
 expenses = []
 
 # ABM INGRESOS
-def insert(income):
+def insertIncome(income):
     '''
     Este método recibe un ingreso, se asegura que sea un ingreso válido
     y lo inserta en la lista de ingresos
@@ -64,7 +64,7 @@ def deleteIncome(income):
     '''
     for i in range(len(incomes)):
         if incomes[i].get("id") == income.get("id"):
-            incomes[i] = income
+            incomes.pop(i)
             return True
     return False
     
