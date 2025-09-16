@@ -293,6 +293,79 @@ def incomes_menu(current_username):
         elif selected == 5:
             print("Volviendo al menú principal...")
 
+def expenses_menu(current_username):
+    options = [
+        "Agregar egreso",
+        "Actualizar egreso",
+        "Eliminar egreso",
+        "Listar todos mis egresos",
+        "Volver"
+    ]
+
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Egresos", options)
+
+        # Crear
+        if selected == 1:
+            expense_id = str(random.randint(1000, 9999))
+            amount = input_float("Ingrese el monto: ")
+            category = choose_category(expense_categories)
+            date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
+            expense = {
+                "id": expense_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = insertExpenses(expense)
+            if ok:
+                print("Egreso agregado.")
+            else:
+                print("No se pudo agregar el egreso (amount debe ser mayor a 0).")
+
+        # Actualizar
+        elif selected == 2:
+            expense_id = input_non_empty("ID del egreso a actualizar: ")
+            amount = input_float("Nuevo monto: ")
+            category = choose_category(expense_categories)
+            date = input_date("Nueva fecha (dd/mm/yyyy): ")
+            expense = {
+                "id": expense_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = updateExpenses(expense)
+            if ok:
+                print("Egreso actualizado.")
+            else:
+                print("No se encontró el egreso para actualizar.")
+
+        # Eliminar
+        elif selected == 3:
+            expense_id = input_non_empty("ID del egreso a eliminar: ")
+            ok = deleteExpenses({"id": expense_id})
+            if ok:
+                print("Egreso eliminado.")
+            else:
+                print("No se encontró el egreso para eliminar.")
+
+        # Listar
+        elif selected == 4:
+            items = getExpensesByUser(current_username)
+            if not items:
+                print("No hay egresos para este usuario.")
+            else:
+                print("\nEgresos del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['date']} | {it['category']} | {it['amount']}")
+
+        elif selected == 5:
+            print("Volviendo al menú principal...")
 
 def main():
     '''
@@ -326,7 +399,7 @@ def main():
         if selected == 1:
             incomes_menu(username)
         elif selected == 2:
-            print("Egresos: próximamente…")
+            expenses_menu(username)
         elif selected == 3:
             print("Métricas: próximamente…")
         elif selected == 4:
