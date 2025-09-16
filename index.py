@@ -1,3 +1,6 @@
+import getpass
+import random
+
 ## DATOS DEL SISTEMA
 
 ## Para el primer MVP vamos a tener un único usuario harcodeado, solo vamos a implementar el login
@@ -23,15 +26,17 @@ users = [
 ## Ingresos y egresos, van a tener la misma interfaz
 # hay lista de ingresos y de egresos, y tienen las siguientes propiedades
 # - id: string (debe ser único)
-# - monto: number
-# - categoria: categorias (vamos a definir un listado fijo de categorias de ingreso y de egreso)
-# - fecha: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
-# - usuario: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
-# Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "monto": 1800.0, "categoria": "Otros", "fecha": "08/06/2025", "usuario": "admin" }
-import random
+# - amount: number
+# - category: categorias (vamos a definir un listado fijo de categorias de ingreso y de egreso)
+# - date: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
+# - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
+# Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
+
 
 incomes = []
+income_categories = ["Salario", "Regalo", "Otros"]
 expenses = []
+expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 
 # ABM INGRESOS
 def insertIncome(income):
@@ -39,7 +44,7 @@ def insertIncome(income):
     Este método recibe un ingreso, se asegura que sea un ingreso válido
     y lo inserta en la lista de ingresos
     '''
-    if income.get("monto") <= 0:
+    if income.get("amount") <= 0:
         return False
     
     incomes.append(income)
@@ -75,7 +80,7 @@ def getIncomesByUser(username):
     '''
     found_incomes = []
     for income in incomes:
-        if income.get("usuario") == username:
+        if income.get("user") == username:
             found_incomes.append(income)
     return found_incomes
 
@@ -86,7 +91,7 @@ def insertExpenses(expense):
         Este método recibe un egreso, se asegura que sea un egreso válido
         y lo inserta en la lista de egresos
     '''
-    if expense.get("monto") <= 0:
+    if expense.get("amount") <= 0:
         return False
     
     expenses.append(expense)
@@ -121,7 +126,7 @@ def getExpensesByUser(username):
     '''
     found_expenses = []
     for expense in expenses:
-        if expense.get("usuario") == username:
+        if expense.get("user") == username:
             found_expenses.append(expense)
     return found_expenses
 
@@ -130,19 +135,12 @@ def login(username, password):
     '''
     Este método recibe un nombre de usuario y una contraseña, 
     busca el usuario que coincida con ese nombre y luego verifica que la contraseña coincida
-    - Devuelve un -1 en caso de que no exista el usuario o no se encuentre la contraseña
-    - crear método auxiliar para buscar un usuario
+    - Devuelve un booleano que indica si se pudo autenticar o no
     '''
-
-    login_exitoso=False 
     for user in users:
-        if user["username"]== username and user["password"]==password:
-         login_exitoso= True
-            
-    if login_exitoso:
-        print("resultado: Auteticacion exitosa")
-    else:
-        print("-1")
+        if user.get("name") == username and user.get("password") == password:
+            return True
+    return False
 
 
 def getUser(username):
@@ -155,26 +153,258 @@ def getUser(username):
             return user
     return -1
 
+## Utils
+def get_menu_option(message, options):
+    '''
+    Muestra un menú con las opciones dadas y devuelve el índice elegido.
+    - message: título del menú
+    - options: lista de strings con las opciones
+    '''
+    print(f"\n{message}")
+    for i in range(len(options)):
+        print(f"{i+1}. {options[i]}")
+        
+    choice = 0
+    while choice < 1 or choice > len(options):
+        choice_str = input("Seleccione una opción: ")
+        if choice_str.isdigit():
+            choice = int(choice_str)
+        if choice < 1 or choice > len(options):
+            print("Opción inválida, intente de nuevo.")
 
+    return choice
 
+def input_float(message):
+    """
+    Pide un número decimal al usuario y valida hasta que se ingrese correctamente.
+    """
+    value = None
+    while value is None:
+        user_input = input(message)
+        if user_input.replace(".", "", 1).isdigit(): # si tiene punto lo toma igual como un numero porque elimina un . para la validacion
+            value = float(user_input)
+        else:
+            print("Error: debe ingresar un número válido.")
+    return value
+
+def input_non_empty(message):
+    """
+    Pide un string no vacío.
+    """
+    value = ""
+    while not value.strip():
+        value = input(message)
+        if not value.strip():
+            print("Error: no puede estar vacío.")
+    return value
+
+def input_date(message):
+    """
+    Pide una fecha en formato dd/mm/yyyy.
+    """
+    date_str = ""
+    is_valid = False
+    while not is_valid:
+        date_str = input(message)
+        parts = date_str.split("/")
+        if len(parts) == 3:
+            day_str, month_str, year_str = parts[0], parts[1], parts[2]
+
+            if day_str.isdigit() and month_str.isdigit() and year_str.isdigit():
+                day = int(day_str)
+                month = int(month_str)
+                year = int(year_str)
+
+                if 1 <= day <= 31 and 1 <= month <= 12 and year > 1900:
+                    is_valid = True
+
+        if not is_valid:
+            print("Error: la fecha debe tener formato dd/mm/yyyy válido.")
+
+    return date_str
+
+def choose_category(categories):
+    """
+    Muestra un menú para elegir una categoría de la lista y devuelve el string elegido.
+    """
+    idx = get_menu_option("Elija una categoría", categories)
+    return categories[idx - 1]
+
+### Menus
+def incomes_menu(current_username):
+    options = [
+        "Agregar ingreso",
+        "Actualizar ingreso",
+        "Eliminar ingreso",
+        "Listar todos mis ingresos",
+        "Volver"
+    ]
+
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Ingresos", options)
+
+        # Crear
+        if selected == 1:
+            income_id = str(random.randint(1000, 9999))
+            amount = input_float("Ingrese el monto: ")
+            category = choose_category(income_categories)
+            date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
+            income = {
+                "id": income_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = insertIncome(income)
+            print("Ingreso agregado." if ok else "No se pudo agregar el ingreso (amount debe ser mayor a 0).")
+        # Actualizar
+        elif selected == 2:
+            income_id = input_non_empty("ID del ingreso a actualizar: ")
+            amount = input_float("Nuevo ingreso: ")
+            category = choose_category(income_categories)
+            date = input_date("Nueva fecha (dd/mm/yyyy): ")
+            income = {
+                "id": income_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = updateIncome(income)
+            print("Ingreso actualizado." if ok else "No se encontró el ingreso para actualizar.")
+        # Eliminar
+        elif selected == 3:
+            income_id = input_non_empty("ID del income a eliminar: ")
+            ok = deleteIncome({"id": income_id})
+            print("Ingreso eliminado." if ok else "No se encontró el ingreso para eliminar.")
+        # Listar
+        elif selected == 4:
+            items = getIncomesByUser(current_username)
+            if not items:
+                print("No hay ingresos para este usuario.")
+            else:
+                print("\nIngresos del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['date']} | {it['category']} | {it['amount']}")
+
+        elif selected == 5:
+            print("Volviendo al menú principal...")
+
+def expenses_menu(current_username):
+    options = [
+        "Agregar egreso",
+        "Actualizar egreso",
+        "Eliminar egreso",
+        "Listar todos mis egresos",
+        "Volver"
+    ]
+
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Egresos", options)
+
+        # Crear
+        if selected == 1:
+            expense_id = str(random.randint(1000, 9999))
+            amount = input_float("Ingrese el monto: ")
+            category = choose_category(expense_categories)
+            date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
+            expense = {
+                "id": expense_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = insertExpenses(expense)
+            if ok:
+                print("Egreso agregado.")
+            else:
+                print("No se pudo agregar el egreso (amount debe ser mayor a 0).")
+
+        # Actualizar
+        elif selected == 2:
+            expense_id = input_non_empty("ID del egreso a actualizar: ")
+            amount = input_float("Nuevo monto: ")
+            category = choose_category(expense_categories)
+            date = input_date("Nueva fecha (dd/mm/yyyy): ")
+            expense = {
+                "id": expense_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = updateExpenses(expense)
+            if ok:
+                print("Egreso actualizado.")
+            else:
+                print("No se encontró el egreso para actualizar.")
+
+        # Eliminar
+        elif selected == 3:
+            expense_id = input_non_empty("ID del egreso a eliminar: ")
+            ok = deleteExpenses({"id": expense_id})
+            if ok:
+                print("Egreso eliminado.")
+            else:
+                print("No se encontró el egreso para eliminar.")
+
+        # Listar
+        elif selected == 4:
+            items = getExpensesByUser(current_username)
+            if not items:
+                print("No hay egresos para este usuario.")
+            else:
+                print("\nEgresos del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['date']} | {it['category']} | {it['amount']}")
+
+        elif selected == 5:
+            print("Volviendo al menú principal...")
 
 def main():
     '''
     Función principal del programa
     '''
-    print("Sin implementar...")
+    print("Bienvenido al sistema de finanzas.")
+    username = input("Ingrese nombre de usuario: ")
+    password = getpass.getpass("Ingrese contraseña: ")
 
+    isLogged = login(username, password)
+    while not isLogged:
+        print("Error en las credenciales")
+        username = input("Ingrese nombre de usuario: ")
+        password = getpass.getpass("Ingrese contraseña: ")
+        isLogged = login(username, password)
+
+    print("resultado: Auteticacion exitosa")
     
-    """
-    # Prueba
-    expense = {
-        "id":"1", 
-        "monto": 2222, 
-        "categoria": "comida", 
-        "fecha": 11/10/2004, 
-        "usuario": "O010000"  
-    }
-    """
+    # Menú principal
+    main_options = [
+        "Ingresos",
+        "Egresos",
+        "Métricas",
+        "Salir"
+    ]
+
+    selected = 0
+    while selected != len(main_options):
+        selected = get_menu_option("Menú principal", main_options)
+
+        if selected == 1:
+            incomes_menu(username)
+        elif selected == 2:
+            expenses_menu(username)
+        elif selected == 3:
+            print("Métricas: próximamente…")
+        elif selected == 4:
+            print("Saliendo...")
+
 
 #### INICIO DE PROGRAMA
 main()
