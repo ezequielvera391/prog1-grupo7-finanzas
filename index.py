@@ -1,3 +1,6 @@
+import getpass
+import random
+
 ## DATOS DEL SISTEMA
 
 ## Para el primer MVP vamos a tener un único usuario harcodeado, solo vamos a implementar el login
@@ -28,7 +31,7 @@ users = [
 # - fecha: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
 # - usuario: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "monto": 1800.0, "categoria": "Otros", "fecha": "08/06/2025", "usuario": "admin" }
-import random
+
 
 incomes = []
 expenses = []
@@ -130,19 +133,12 @@ def login(username, password):
     '''
     Este método recibe un nombre de usuario y una contraseña, 
     busca el usuario que coincida con ese nombre y luego verifica que la contraseña coincida
-    - Devuelve un -1 en caso de que no exista el usuario o no se encuentre la contraseña
-    - crear método auxiliar para buscar un usuario
+    - Devuelve un booleano que indica si se pudo autenticar o no
     '''
-
-    login_exitoso=False 
     for user in users:
-        if user["username"]== username and user["password"]==password:
-         login_exitoso= True
-            
-    if login_exitoso:
-        print("resultado: Auteticacion exitosa")
-    else:
-        print("-1")
+        if user.get("name") == username and user.get("password") == password:
+            return True
+    return False
 
 
 def getUser(username):
@@ -162,9 +158,20 @@ def main():
     '''
     Función principal del programa
     '''
-    print("Sin implementar...")
+    print("Bienvenido al sistema de finanzas.")
+    username = input("Ingrese nombre de usuario: ")
+    password = getpass.getpass("Ingrese contraseña: ")
 
-    
+    isLogged = login(username, password)
+    while not isLogged:
+        print("Error en las credenciales")
+        username = input("Ingrese nombre de usuario: ")
+        password = getpass.getpass("Ingrese contraseña: ")
+        isLogged = login(username, password)
+
+    print("resultado: Auteticacion exitosa")
+    # Se muestra menú principal
+
     """
     # Prueba
     expense = {
