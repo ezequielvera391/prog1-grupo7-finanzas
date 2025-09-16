@@ -51,3 +51,25 @@ El **primer MVP** representa aproximadamente el **40% del alcance total**. Inclu
 - Definición de la función `main()` con interacción básica por consola.  
 
 Este MVP permite validar la estructura inicial del programa y sirve como base para construir el resto de los módulos más avanzados (objetivos de ahorro, reportes gráficos y estadísticas).  
+
+---
+
+### Segundo MVP (80%)  
+Ampliación de funcionalidades y robustez:  
+- **Validaciones más sólidas** para inputs.  
+- **Módulo ABM de objetivos de ahorro.**  
+- **Persistencia de datos en archivos CSV o JSON** para reemplazar las listas en memoria.  
+- **Métricas sobre los datos ingresados**, como:  
+  - Gasto total por mes.  
+  - Porcentaje de aumento o disminución de ahorro entre períodos.  
+  - Promedio de gasto por categoría.  
+- Ampliación del módulo de **autenticación**, incorporando registro básico de usuarios.  
+
+--- 
+
+### Versión Final (100%)  
+Mejoras e integración completa:  
+- Uso de librerías para mejorar visualizaciones en consola.  
+- Reportes gráficos más claros y legibles.  
+- Mejora en la experiencia de usuario (menús más intuitivos, mensajes más descriptivos).  
+- Incluir más metricas
