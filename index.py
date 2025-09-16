@@ -26,15 +26,17 @@ users = [
 ## Ingresos y egresos, van a tener la misma interfaz
 # hay lista de ingresos y de egresos, y tienen las siguientes propiedades
 # - id: string (debe ser único)
-# - monto: number
-# - categoria: categorias (vamos a definir un listado fijo de categorias de ingreso y de egreso)
-# - fecha: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
-# - usuario: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
-# Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "monto": 1800.0, "categoria": "Otros", "fecha": "08/06/2025", "usuario": "admin" }
+# - amount: number
+# - category: categorias (vamos a definir un listado fijo de categorias de ingreso y de egreso)
+# - date: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
+# - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
+# Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
 
 
 incomes = []
+income_categories = ["Salario", "Regalo", "Otros"]
 expenses = []
+expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 
 # ABM INGRESOS
 def insertIncome(income):
@@ -42,7 +44,7 @@ def insertIncome(income):
     Este método recibe un ingreso, se asegura que sea un ingreso válido
     y lo inserta en la lista de ingresos
     '''
-    if income.get("monto") <= 0:
+    if income.get("amount") <= 0:
         return False
     
     incomes.append(income)
@@ -78,7 +80,7 @@ def getIncomesByUser(username):
     '''
     found_incomes = []
     for income in incomes:
-        if income.get("usuario") == username:
+        if income.get("user") == username:
             found_incomes.append(income)
     return found_incomes
 
@@ -89,7 +91,7 @@ def insertExpenses(expense):
         Este método recibe un egreso, se asegura que sea un egreso válido
         y lo inserta en la lista de egresos
     '''
-    if expense.get("monto") <= 0:
+    if expense.get("amount") <= 0:
         return False
     
     expenses.append(expense)
@@ -124,7 +126,7 @@ def getExpensesByUser(username):
     '''
     found_expenses = []
     for expense in expenses:
-        if expense.get("usuario") == username:
+        if expense.get("user") == username:
             found_expenses.append(expense)
     return found_expenses
 
@@ -151,6 +153,75 @@ def getUser(username):
             return user
     return -1
 
+## Utils
+def get_menu_option(message, options):
+    '''
+    Muestra un menú con las opciones dadas y devuelve el índice elegido.
+    - message: título del menú
+    - options: lista de strings con las opciones
+    '''
+    print(f"\n{message}")
+    for i in range(len(options)):
+        print(f"{i+1}. {options[i]}")
+        
+    choice = 0
+    while choice < 1 or choice > len(options):
+        choice_str = input("Seleccione una opción: ")
+        if choice_str.isdigit():
+            choice = int(choice_str)
+        if choice < 1 or choice > len(options):
+            print("Opción inválida, intente de nuevo.")
+
+    return choice
+
+def input_float(message):
+    """
+    Pide un número decimal al usuario y valida hasta que se ingrese correctamente.
+    """
+    value = None
+    while value is None:
+        user_input = input(message)
+        if user_input.replace(".", "", 1).isdigit(): # si tiene punto lo toma igual como un numero porque elimina un . para la validacion
+            value = float(user_input)
+        else:
+            print("Error: debe ingresar un número válido.")
+    return value
+
+def input_non_empty(message):
+    """
+    Pide un string no vacío.
+    """
+    value = ""
+    while not value.strip():
+        value = input(message)
+        if not value.strip():
+            print("Error: no puede estar vacío.")
+    return value
+
+def input_date(message):
+    """
+    Pide una fecha en formato dd/mm/yyyy.
+    """
+    date_str = ""
+    is_valid = False
+    while not is_valid:
+        date_str = input(message)
+        parts = date_str.split("/")
+        if len(parts) == 3:
+            day_str, month_str, year_str = parts[0], parts[1], parts[2]
+
+            if day_str.isdigit() and month_str.isdigit() and year_str.isdigit():
+                day = int(day_str)
+                month = int(month_str)
+                year = int(year_str)
+
+                if 1 <= day <= 31 and 1 <= month <= 12 and year > 1900:
+                    is_valid = True
+
+        if not is_valid:
+            print("Error: la fecha debe tener formato dd/mm/yyyy válido.")
+
+    return date_str
 
 
 
@@ -172,16 +243,6 @@ def main():
     print("resultado: Auteticacion exitosa")
     # Se muestra menú principal
 
-    """
-    # Prueba
-    expense = {
-        "id":"1", 
-        "monto": 2222, 
-        "categoria": "comida", 
-        "fecha": 11/10/2004, 
-        "usuario": "O010000"  
-    }
-    """
 
 #### INICIO DE PROGRAMA
 main()
