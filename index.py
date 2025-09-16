@@ -223,6 +223,75 @@ def input_date(message):
 
     return date_str
 
+def choose_category(categories):
+    """
+    Muestra un menú para elegir una categoría de la lista y devuelve el string elegido.
+    """
+    idx = get_menu_option("Elija una categoría", categories)
+    return categories[idx - 1]
+
+### Menus
+def incomes_menu(current_username):
+    options = [
+        "Agregar ingreso",
+        "Actualizar ingreso",
+        "Eliminar ingreso",
+        "Listar todos mis ingresos",
+        "Volver"
+    ]
+
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Ingresos", options)
+
+        # Crear
+        if selected == 1:
+            income_id = str(random.randint(1000, 9999))
+            amount = input_float("Ingrese el monto: ")
+            category = choose_category(income_categories)
+            date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
+            income = {
+                "id": income_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = insertIncome(income)
+            print("Ingreso agregado." if ok else "No se pudo agregar el ingreso (amount debe ser mayor a 0).")
+        # Actualizar
+        elif selected == 2:
+            income_id = input_non_empty("ID del ingreso a actualizar: ")
+            amount = input_float("Nuevo ingreso: ")
+            category = choose_category(income_categories)
+            date = input_date("Nueva fecha (dd/mm/yyyy): ")
+            income = {
+                "id": income_id,
+                "amount": amount,
+                "category": category,
+                "date": date,
+                "user": current_username
+            }
+            ok = updateIncome(income)
+            print("Ingreso actualizado." if ok else "No se encontró el ingreso para actualizar.")
+        # Eliminar
+        elif selected == 3:
+            income_id = input_non_empty("ID del income a eliminar: ")
+            ok = deleteIncome({"id": income_id})
+            print("Ingreso eliminado." if ok else "No se encontró el ingreso para eliminar.")
+        # Listar
+        elif selected == 4:
+            items = getIncomesByUser(current_username)
+            if not items:
+                print("No hay ingresos para este usuario.")
+            else:
+                print("\nIngresos del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['date']} | {it['category']} | {it['amount']}")
+
+        elif selected == 5:
+            print("Volviendo al menú principal...")
 
 
 def main():
@@ -241,7 +310,27 @@ def main():
         isLogged = login(username, password)
 
     print("resultado: Auteticacion exitosa")
-    # Se muestra menú principal
+    
+    # Menú principal
+    main_options = [
+        "Ingresos",
+        "Egresos",
+        "Métricas",
+        "Salir"
+    ]
+
+    selected = 0
+    while selected != len(main_options):
+        selected = get_menu_option("Menú principal", main_options)
+
+        if selected == 1:
+            incomes_menu(username)
+        elif selected == 2:
+            print("Egresos: próximamente…")
+        elif selected == 3:
+            print("Métricas: próximamente…")
+        elif selected == 4:
+            print("Saliendo...")
 
 
 #### INICIO DE PROGRAMA
