@@ -3,6 +3,13 @@ import random
 
 ## DATOS DEL SISTEMA
 
+## BASE DE DATOS
+## Defino acá el path para los distintos archivos que van a representar las colecciones de mi base de datos
+DB_DIR = "./data"
+USERS_FILE = f"{DB_DIR}/users.json"
+INCOMES_FILE = f"{DB_DIR}/incomes.json"
+EXPENSES_FILE = f"{DB_DIR}/expenses.json"
+
 ## Para el primer MVP vamos a tener un único usuario harcodeado, solo vamos a implementar el login
 # Lista de usuarios, los usarios tienen las siguientes propiedades:
 # - id: string (debe ser único y autogenerado)
@@ -366,6 +373,141 @@ def expenses_menu(current_username):
 
         elif selected == 5:
             print("Volviendo al menú principal...")
+
+
+## BASES DE DATOS ##
+### Generales
+def read_collection(file_path):
+    '''
+    Recibe un string que es el path donde va a buscar el archivo de base de datos
+    Devuelve la lista del documento o [] si no existe o está vacio
+    '''
+
+def next_id_from_collection(file_path, id_field="id"):
+    '''
+    Recibe el path de una coleccion, y opcionalmente un string con el nombre del campo de id que debe modificar (por defecto "id")
+    Calcula el valor del siguiente id (id max de la colleccion + 1), si la coleccion no tiene elementos retorna 1.
+    '''
+
+### Usuarios 
+def users_insert(user):
+    '''
+    Verifica que el usuario que se intenta ingresar no exista ya en base de datos
+    De no existir lo ingresa, sino envía un error
+    '''
+
+def users_update(user):
+    '''
+    Recibe un usuario, busca que exista el nombre de usuario y el id
+    En caso de existir lo actualiza, sino envía un error.
+    '''
+
+def users_delete(user_id):
+    '''
+    Recibe el id de un usuario, busca que exista.
+    En caso de existir lo elimina, sino envía un error.
+    '''
+
+def users_find_by_name(name):
+    '''
+    Recibe el nombre de un usuario, busca que exista.
+    En caso de existir lo devuelve completo, sino envía un error.
+    '''
+
+def login_check(username, password):
+    '''
+    Recibe un usuario y contraseña, 
+    verifica que el usuario exista y luego que la contraseña ingresada coincida con la que está guardada para ese usuario
+    En caso de éxito devuelve True, sino devuelve False
+    '''
+
+### Incomes
+
+def incomes_insert(income):
+    '''
+    Recibe un ingreso y lo guarda en incomes.json.
+    Chequeos básicos:
+    - amount > 0
+    - category en income_categories
+    - formato de fecha
+    - user existe en users.json
+    Se asigna id Auto-incremental (max(id)+1).
+    Devuelve (True, income_final) o (False, "motivo").
+    '''
+
+def incomes_update(income):
+    '''
+    Actualiza un ingreso existente (mismo id).
+    Aplica los mismos chequeos que el insert.
+    Devuelve (True, None) o (False, "motivo").
+    '''
+
+def incomes_delete(income_id):
+    '''
+    Borra un ingreso por id de incomes.json.
+    Devuelve (True, None) o (False, "no existe").
+    '''
+
+def incomes_by_user(username):
+    '''
+    Devuelve todos los incomes donde user == username.
+    (Opcional: ordenar por fecha si hace falta)
+    '''
+
+def incomes_find_by_id(income_id):
+    '''
+    Busca un income por id.
+    Devuelve el dict o None.
+    '''
+
+### Expenses
+def expenses_insert(expense):
+    '''
+    Recibe un egreso y lo guarda en expenses.json.
+    Chequeos básicos:
+    - amount > 0
+    - category en expense_categories
+    - formato de fecha
+    - user existe en users.json
+    Se asigna id Auto-incremental (max(id)+1)
+    Devuelve (True, expense_final) o (False, "motivo").
+    '''
+
+def expenses_update(expense):
+    '''
+    Actualiza un egreso existente (mismo id).
+    Mismos chequeos que el insert.
+    Devuelve (True, None) o (False, "motivo").
+    '''
+
+def expenses_delete(expense_id):
+    '''
+    Borra un egreso por id de expenses.json.
+    Devuelve (True, None) o (False, "no existe").
+    '''
+
+def expenses_by_user(username):
+    '''
+    Devuelve todos los expenses donde user == username.
+    (Opcional: ordenar por fecha si hace falta)
+    '''
+
+def expenses_find_by_id(expense_id):
+    '''
+    Busca un expense por id.
+    Devuelve el dict o None.
+    '''
+
+### Boostrap DDBB
+def ensure_db_files():
+    '''
+    Crea ./data si no existe y asegura que existan:
+    - users.json
+    - incomes.json
+    - expenses.json
+    Si falta alguno, lo inicializa con [].
+    No imprime ni pide input. Es solo para inicializar la bbdd en caso de que no exista
+    '''
 
 def main():
     '''
