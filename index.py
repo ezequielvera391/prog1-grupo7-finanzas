@@ -76,12 +76,11 @@ def deleteIncome(income):
 
 def getIncomesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y busca en la lista todos los incomes que hayan sido ingresados por ese usuario
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los ingresos de ese usuario.
     '''
-    found_incomes = []
-    for income in incomes:
-        if income.get("user") == username:
-            found_incomes.append(income)
+    found_incomes = list(filter(lambda income: income.get("user") == username, incomes))
+
     return found_incomes
 
 
@@ -122,12 +121,11 @@ def deleteExpenses(expense):
 
 def getExpensesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y busca en la lista todos los egresos que hayan sido ingresados por ese usuario
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los agresos de ese usuario.
     '''
-    found_expenses = []
-    for expense in expenses:
-        if expense.get("user") == username:
-            found_expenses.append(expense)
+    found_expenses = list(filter(lambda expense: expense.get("user") == username, expenses))
+
     return found_expenses
 
 # AUTH
@@ -149,7 +147,7 @@ def getUser(username):
     devuelve -1 en caso de no encontrarlo
     '''
     for user in users:
-        if user["username"] == username:
+        if user["name"] == username:
             return user
     return -1
 
