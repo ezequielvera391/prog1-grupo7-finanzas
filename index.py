@@ -33,6 +33,7 @@ users = [
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
 
 
+
 incomes = []
 income_categories = ["Salario", "Regalo", "Otros"]
 expenses = []
@@ -152,6 +153,61 @@ def getUser(username):
         if user["username"] == username:
             return user
     return -1
+
+#ingreso de datos
+
+def ingreso_dedatos(users, name, password, password2):
+    """Registra un nuevo usuario si no existe y las contraseñas coinciden."""
+
+    for user in users:
+        if user["name"] == name:
+            print("El usuario ya existe. Intente con otro nombre.")
+            return users
+
+    "valido la contraseña"
+    if password != password2:
+        print("Las contraseñas no coinciden. Intente nuevamente.")
+        return users
+
+    "creo un nuevo usuario cuando no este en el sistema "
+    new_user = {
+        "id": str(len(users) + 1),
+        "name": name,
+        "password": password,
+        "age": 0,
+        "genre": 0,
+        "role": "user"
+    }
+
+    users.append(new_user)
+    print("Usuario registrado correctamente.")
+    return users
+
+
+def validar_existenciauser(users, name):
+    """Valida si un usuario existe."""
+    for user in users:
+        if user["name"] == name:
+            print("Usuario encontrado correctamente.")
+            return True
+    print("Usuario no encontrado.")
+    return False
+
+
+def validar_userandpassword(users, name, password):
+    """Valida si el usuario y la contraseña coinciden."""
+    for user in users:
+        if user["name"] == name:
+            if user["password"] == password:
+                print("Acceso concedido.")
+                return True
+            else:
+                print("Contraseña incorrecta.")
+                return False
+    print("Usuario no registrado.")
+    return False
+
+
 
 ## Utils
 def get_menu_option(message, options):
