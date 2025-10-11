@@ -35,22 +35,20 @@ users = [
 
 incomes = [
     # Datos de prueba para el usuario 'admin'
-    #Junio 2024
     {"id": "1001", "amount": 50000.0, "category": "Salario", "date": "05/06/2024", "user": "admin"},
     {"id": "1002", "amount": 5000.0, "category": "Regalo", "date": "15/06/2024", "user": "admin"},
-    #Julio 2024
     {"id": "1003", "amount": 52000.0, "category": "Salario", "date": "05/07/2024", "user": "admin"},
 ]
 income_categories = ["Salario", "Regalo", "Otros"]
 
 expenses = [
     # Datos de prueba para el usuario 'admin'
-    # Ahorro Junio: (50000+5000) - (10000+3000) = 42000
     {"id": "2001", "amount": 10000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
+    {"id": "2001", "amount": 15000.0, "category": "Supermercado", "date": "15/06/2024", "user": "admin"},
+    {"id": "2003", "amount": 12000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
+    {"id": "2003", "amount": 2000.0, "category": "Otros", "date": "10/06/2024", "user": "admin"},
     {"id": "2002", "amount": 3000.0, "category": "Transporte", "date": "20/06/2024", "user": "admin"},
-    # Ahorro Julio: 52000 - (12000+15000) = 25000
-    {"id": "2003", "amount": 12000.0, "category": "Supermercado", "date": "10/07/2024", "user": "admin"},
-    {"id": "2004", "amount": 15000.0, "category": "Vivienda", "date": "15/07/2024", "user": "admin"},
+    {"id": "2004", "amount": 105000.0, "category": "Vivienda", "date": "15/06/2024", "user": "admin"},
 ]
 expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 
@@ -323,6 +321,41 @@ def percent_change_in_savings(username, month1, year1, month2, year2):
 
 
 
+def average_expense_by_category(username, month, year):
+    """
+    Calcula el porcentaje de gasto por categoría para un usuario.
+    - Proceso:
+        1. Filtra egresos del usuario para el mes/año dados
+        2. Agrupa por categoría y acumula el total por categoría
+        3. Calcula porcentaje = (suma_categoria / total_gastos) * 100
+    
+    Devuelve el porcentaje que representa cada categoría del total de gastos.
+    """
+    category_totals = {}
+    total_expenses = 0.0
+        
+    for exp in expenses:
+        if exp.get("user") == username:
+            parsed = convert_to_tuple(exp.get("date"))
+            if parsed:
+                if (parsed[1] == month and parsed[2] == year):
+                    cat = exp.get("category", "otros")
+                    amount = exp.get("amount")
+                    
+                    if cat in category_totals:
+                        category_totals[cat] = category_totals[cat] + amount
+                    else:
+                        category_totals[cat] = amount
+                    total_expenses += amount
+    
+    percentages = {}
+    if total_expenses > 0:
+        for category in category_totals:
+            percentages[category] = (category_totals[category] / total_expenses) * 100.0
+
+    return percentages 
+
+
 ### Menus
 def incomes_menu(current_username):
     options = [
@@ -466,6 +499,7 @@ def metrics_menu(current_username):
     options = [
         "Calcular ahorro mensual",
         "Comparar ahorro entre dos meses",
+        "Porcentaje de gasto por categoría",         
         "Volver"
     ]
 
@@ -497,7 +531,7 @@ def metrics_menu(current_username):
             print(f"\nEl ahorro para el mes {month} en el año {year} fue de: ${savings_formatted}")
 
         # Comparar ahorro
-        elif selected == 2:
+        elif selected == 2:    
             print("\n--- Comparar Ahorro Entre Dos Meses ---")
             print("-- Primer Período --")
             month1 = 0
@@ -544,8 +578,36 @@ def metrics_menu(current_username):
                     print(f"\nHubo una disminución del {decrease_formatted}% en el ahorro.")
                 else:
                     print("\nNo hubo cambios en el ahorro entre los dos períodos.")
-        
+
         elif selected == 3:
+            print("\n--- Porcentaje de Gasto por Categoría ---")
+            month = 0
+            while not (1 <= month <= 12):
+                month_str = input("Ingrese el mes (1-12): ")
+                if month_str.isdigit():
+                    month = int(month_str)
+                if not (1 <= month <= 12):
+                    print("Error: debe ingresar un mes válido (1-12).")
+
+            year = 0
+            while not (year > 1900):
+                year_str = input("Ingrese el año (ej: 2024): ")
+                if year_str.isdigit():
+                    year = int(year_str)
+                if not (year > 1900):
+                    print("Error: debe ingresar un año válido (mayor a 1900).")
+
+            percentages = average_expense_by_category(current_username, month, year)
+    
+            if not percentages:
+                print(f"\nNo hay egresos para el mes {month}/{year}.")
+            else:
+                print(f"\nPorcentaje de gasto por categoría en la fecha: {month}/{year}:")
+                for categoria, porcentaje in percentages.items():
+                    print(f"- {categoria}: {porcentaje:.2f}%")
+    
+
+        elif selected == 4:
             print("Volviendo al menú principal...")
 
 
