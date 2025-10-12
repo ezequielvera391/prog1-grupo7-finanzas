@@ -153,6 +153,69 @@ def getUser(username):
             return user
     return -1
 
+
+def registrar_usuario(users, name, password, password2, age, genre, role="user"):
+    
+    #Registra un nuevo usuario despues de validar que no exista y que las contraseñas coincidan.
+       #- Verifica si el usuario ya existe en la lista.
+        # - Compara que ambas contraseñas coincidan.
+        #- Agrega el nuevo usuario a la lista "users".
+        #crear un nuevo diccionario con el nuevo usuario 
+
+    #Retorna:
+       # Lista de usuarios actualizada (con el nuevo usuario).
+    
+    # Validar si el usuario ya existe
+    if validar_existenciauser(users, name):
+        print("El usuario ya existe. Intente con otro nombre.")
+        return users
+    False
+
+    # Validar que las contraseñas coincidan
+    if password != password2:
+        print("Las contraseñas no coinciden. Intente nuevamente.")
+        return users 
+    False
+
+    # Crear el nuevo usuario
+    new_user = {
+        "id": str(len(users) + 1),
+        "name": name,
+        "password": password,
+        "age": age,
+        "genre": genre,
+        "role": role
+    }
+
+    users.append(new_user)
+    print("Usuario registrado correctamente.")
+    return users, True
+
+def validar_existenciauser(users, name):
+    """
+    Valida si un usuario existe en la lista de usuarios.
+    """
+    for user in users:
+        if user["name"] == name:
+            return True
+    return False
+
+def validar_userandpassword(users, name, password):
+    """
+    Valida que el usuario exista y que la contraseña ingresada sea correcta.
+    """
+    for user in users:
+        if user["name"] == name:
+            if user["password"] == password:
+                print("Acceso concedido.")
+                return True
+            else:
+                print("Contraseña incorrecta.")
+                return False
+    print("Usuario no registrado.")
+    return False
+
+
 ## Utils
 def get_menu_option(message, options):
     '''
@@ -368,19 +431,48 @@ def expenses_menu(current_username):
             print("Volviendo al menú principal...")
 
 def main():
+  
+#### INICIO DE PROGRAMA
+
     '''
     Función principal del programa
     '''
+    #(" ya tenes cuenta? si= login  no= registrarse")
+
+    # Lista de usuarios 
+    users = []
+
     print("Bienvenido al sistema de finanzas.")
+    
+    # Preguntar si tiene cuenta
+    tiene_cuenta = input("¿Ya posees una cuenta? (si/no): ").lower().strip()  #lo use para que lo deje en mi usculas y sin espacios
+    
+    if tiene_cuenta == "no":
+        # Proceso de registro
+        print("\n--- REGISTRO DE NUEVO USUARIO ---")
+        username = input("Ingrese nombre de usuario: ")
+        password = getpass.getpass("Ingrese contraseña: ")
+        password2 = getpass.getpass("Confirme contraseña: ")
+        age = int(input("Ingrese edad: "))
+        genre = input("Ingrese género: ")
+        
+        # Registrar usuario
+        users, exito = registrar_usuario(users, username, password, password2, age, genre)
+        
+        if not exito:
+            print("No se pudo completar el registro. Intente nuevamente.")
+            return
+
     username = input("Ingrese nombre de usuario: ")
     password = getpass.getpass("Ingrese contraseña: ")
 
-    isLogged = login(username, password)
+    # usar validar_userandpassword en lugar de login
+    isLogged = validar_userandpassword(users, username, password)
     while not isLogged:
         print("Error en las credenciales")
         username = input("Ingrese nombre de usuario: ")
         password = getpass.getpass("Ingrese contraseña: ")
-        isLogged = login(username, password)
+        isLogged = validar_userandpassword(users, username, password)
 
     print("resultado: Auteticacion exitosa")
     
@@ -388,7 +480,7 @@ def main():
     main_options = [
         "Ingresos",
         "Egresos",
-        "Métricas",
+        "Métricas", 
         "Salir"
     ]
 
@@ -404,7 +496,6 @@ def main():
             print("Métricas: próximamente…")
         elif selected == 4:
             print("Saliendo...")
-
 
 #### INICIO DE PROGRAMA
 main()
