@@ -61,6 +61,39 @@ def _is_valid_date(date_str):
         return False
     except Exception:
         return False
+    
+def _validate_expense(expense):
+    """
+    Recibe expense de tipo dict.
+    Valida que tenga los campos básicos correctos:
+    - amount numérico y > 0
+    - category válida
+    - date en formato dd/mm/yyyy
+    - user existente en users.json
+    Devuelve (True, None) si es válido, o (False, "motivo") si no lo es.
+    """
+    if not isinstance(expense, dict):
+        return (False, "formato inválido")
+    
+    try:
+        amount = float(expense.get("amount", 0))
+    except (TypeError, ValueError):
+        return (False, "amount debe ser numérico")
+
+    if amount <= 0:
+        return (False, "amount debe ser mayor a 0")
+
+    if expense.get("category") not in expense_categories:
+        return (False, "Categoría inválida")
+
+    if not _is_valid_date(expense.get("date")):
+        return (False, "Fecha inválida (usar dd/mm/yyyy)")
+
+    users = _read_collection(USERS_FILE)
+    if not any(user.get("name") == expense.get("user") for user in users):
+        return (False, "El usuario que intenta realizar la operación no existe")
+
+    return (True, None)
 
 ## Publicas
 def read_collection_by_name(name):
@@ -162,26 +195,10 @@ def expenses_insert(expense):
     Devuelve (True, expense_final) o (False, "motivo").
     '''
 
-    ## Validaciones
-    try:
-        amount = float(expense.get("amount", 0))
-    except (TypeError, ValueError):
-        return (False, "amount debe ser numérico")
-    
-    if amount <= 0:
-        return (False, "amount debe ser > 0")
-    
-    category = expense.get("category")
-    if category not in expense_categories:
-        return (False, "category inválida")
-    
-    if not _is_valid_date(expense.get("date")):
-        return (False, "fecha inválida (usar dd/mm/yyyy)")
-    
-    # Valida que el usuario que intenta insertar exista en la lista de usuarios registrados
-    users = _read_collection(USERS_FILE)
-    if not any(user.get("name") == expense.get("user") for user in users): 
-        return (False, "user no existe")
+    # Validación
+    ok, msg = _validate_expense(expense)
+    if not ok:
+        return (False, msg)
     
     # Leer colección y calcular próximo id
     rows = _read_collection(EXPENSES_FILE)
@@ -189,8 +206,8 @@ def expenses_insert(expense):
 
     expense_final = {
         "id": new_id,
-        "amount": amount,
-        "category": category,
+        "amount": expense.get("amount"),
+        "category": expense.get("category"),
         "date": expense.get("date"),
         "user": expense.get("user")
     }
@@ -204,28 +221,94 @@ def expenses_insert(expense):
 
 def expenses_update(expense):
     '''
-    Actualiza un egreso existente (mismo id).
-    Mismos chequeos que el insert.
-    Devuelve (True, None) o (False, "motivo").
+    Recibe expense de tipo dict.
+    Actualiza un egreso existente (mismo id) en expenses.json.
+    Valida las siguientes reglas:
+    - amount > 0
+    - category en expense_categories
+    - formato de fecha dd/mm/yyyy
+    - user existente en users.json
+    Devuelve (True, None) si se actualizó correctamente,
+    o (False, "motivo") si no se pudo actualizar.
     '''
+    # Validaciones propias de esta funcion
+    expense_id = expense.get("id")
+    if not expense_id:
+        return (False, "falta campo id")
+    
+    rows = _read_collection(EXPENSES_FILE)
+    if not rows:
+        return (False, "no hay registros en expenses.json")
+
+    # Para cada i, row en rows, si el id del row coincide con expense_id, devuelve ese i; si no hay coincidencias, devuelve None.
+    # En otras palabras, devuelve el primer indice de rows que coincida con expense_id
+    index = next((i for i, row in enumerate(rows) if str(row.get("id")) == str(expense_id)), None)
+    if index is None:
+        return (False, f"no existe egreso con id {expense_id}")
+
+    # Validar las reglas de negocio antes de reemplazar
+    valid, msg = _validate_expense(expense)
+    if not valid:
+        return (False, msg)
+
+    # Actualizar registro existente
+    rows[index] = {
+        "id": str(expense_id),
+        "amount": expense.get("amount"),
+        "category": expense.get("category"),
+        "date": expense.get("date"),
+        "user": expense.get("user")
+    }
+
+    # Guardar en disco
+    with open(EXPENSES_FILE, "w", encoding="utf-8") as f:
+        json.dump(rows, f, ensure_ascii=False, indent=2)
+
+    return (True, None)
 
 def expenses_delete(expense_id):
     '''
+    Recibe expense_id de tipo str.
     Borra un egreso por id de expenses.json.
-    Devuelve (True, None) o (False, "no existe").
+    Devuelve:
+    En caso de éxito: (True, "El egreso fue borrado satisfactoriamente")
+    En caso de que no encuentre el expense: (False, "El egreso que intenta borrar no existe").
     '''
+    rows = _read_collection(EXPENSES_FILE)
+    updated_rows = [row for row in rows if str(row.get("id")) != str(expense_id)]
+
+    # Si la cantidad no cambió, no existía
+    if len(updated_rows) == len(rows):
+        return (False, "El egreso que intenta borrar no existe")
+
+    # Guardar cambios
+    with open(EXPENSES_FILE, "w", encoding="utf-8") as file:
+        json.dump(updated_rows, file, ensure_ascii=False, indent=2)
+
+    return (True, "El egreso fue borrado satisfactoriamente")
+    
 
 def expenses_by_user(username):
     '''
-    Devuelve todos los expenses donde user == username.
-    (Opcional: ordenar por fecha si hace falta)
+    Recibe username de tipo str.
+    Devuelve una lista con todos los egresos (expenses) donde el campo "user" coincide con username.
+    Si no hay coincidencias, devuelve una lista vacía.
     '''
+    rows = _read_collection(EXPENSES_FILE)
+    results = [row for row in rows if row.get("user") == username]
+    return results
 
 def expenses_find_by_id(expense_id):
     '''
+    Recibe expense_id de tipo str.
     Busca un expense por id.
     Devuelve el dict o None.
     '''
+    rows = _read_collection(EXPENSES_FILE)
+    for row in rows:
+        if str(row.get("id")) == str(expense_id):
+            return row
+    return None
 
 ### Boostrap DDBB
 def ensure_db_files():
