@@ -95,6 +95,40 @@ def _validate_expense(expense):
 
     return (True, None)
 
+def _validate_income(income):
+    """
+    Recibe income de tipo dict.
+    Valida que tenga los campos básicos correctos:
+    - amount numérico y > 0
+    - category válida
+    - date en formato dd/mm/yyyy
+    - user existente en users.json
+    Devuelve (True, None) si es válido, o (False, "motivo") si no lo es.
+    """
+    if not isinstance(income, dict):
+        return (False, "formato inválido")
+    
+    try:
+        amount = float(income.get("amount", 0))
+    except (TypeError, ValueError):
+        return (False, "amount debe ser numérico")
+
+    if amount <= 0:
+        return (False, "amount debe ser mayor a 0")
+
+    if income.get("category") not in income_categories:
+        return (False, "Categoría inválida")
+
+    if not _is_valid_date(income.get("date")):
+        return (False, "Fecha inválida (usar dd/mm/yyyy)")
+
+    users = _read_collection(USERS_FILE)
+    if not any(user.get("name") == income.get("user") for user in users):
+        return (False, "El usuario que intenta realizar la operación no existe")
+
+    return (True, None)
+
+
 ## Publicas
 def read_collection_by_name(name):
     """
@@ -147,7 +181,8 @@ def login_check(username, password):
 
 def incomes_insert(income):
     '''
-    Recibe un ingreso y lo guarda en incomes.json.
+    Recibe income de tipo dict.
+    Guarda un ingreso en incomes.json.
     Chequeos básicos:
     - amount > 0
     - category en income_categories
@@ -156,31 +191,105 @@ def incomes_insert(income):
     Se asigna id Auto-incremental (max(id)+1).
     Devuelve (True, income_final) o (False, "motivo").
     '''
+    ok, msg = _validate_income(income)
+    if not ok:
+        return (False, msg)
+
+    rows = _read_collection(INCOMES_FILE)
+    new_id = _next_id_from_collection(INCOMES_FILE)
+
+    income_final = {
+        "id": new_id,
+        "amount": income.get("amount"),
+        "category": income.get("category"),
+        "date": income.get("date"),
+        "user": income.get("user")
+    }
+
+    rows.append(income_final)
+    with open(INCOMES_FILE, "w", encoding="utf-8") as file:
+        json.dump(rows, file, ensure_ascii=False, indent=2)
+
+    return (True, income_final)
 
 def incomes_update(income):
     '''
-    Actualiza un ingreso existente (mismo id).
+    Recibe income de tipo dict.
+    Actualiza un ingreso existente en incomes.json.
     Aplica los mismos chequeos que el insert.
-    Devuelve (True, None) o (False, "motivo").
+    Devuelve (True, None) si se actualizó correctamente,
+    o (False, "motivo") si no se pudo actualizar.
     '''
+    income_id = income.get("id")
+    if not income_id:
+        return (False, "falta campo id")
+
+    rows = _read_collection(INCOMES_FILE)
+    if not rows:
+        return (False, "no hay registros en incomes.json")
+
+    # Buscar índice del registro a actualizar
+    index = next((i for i, row in enumerate(rows) if str(row.get("id")) == str(income_id)), None)
+    if index is None:
+        return (False, f"no existe ingreso con id {income_id}")
+
+    valid, msg = _validate_income(income)
+    if not valid:
+        return (False, msg)
+
+    rows[index] = {
+        "id": str(income_id),
+        "amount": income.get("amount"),
+        "category": income.get("category"),
+        "date": income.get("date"),
+        "user": income.get("user")
+    }
+
+    with open(INCOMES_FILE, "w", encoding="utf-8") as file:
+        json.dump(rows, file, ensure_ascii=False, indent=2)
+
+    return (True, None)
 
 def incomes_delete(income_id):
     '''
+    Recibe income_id de tipo str.
     Borra un ingreso por id de incomes.json.
-    Devuelve (True, None) o (False, "no existe").
+    Devuelve:
+    (True, "El ingreso fue borrado satisfactoriamente")
+    o (False, "El ingreso que intenta borrar no existe").
     '''
+    rows = _read_collection(INCOMES_FILE)
+    updated_rows = [row for row in rows if str(row.get("id")) != str(income_id)]
+
+    if len(updated_rows) == len(rows):
+        return (False, "El ingreso que intenta borrar no existe")
+
+    with open(INCOMES_FILE, "w", encoding="utf-8") as file:
+        json.dump(updated_rows, file, ensure_ascii=False, indent=2)
+
+    return (True, "El ingreso fue borrado satisfactoriamente")
 
 def incomes_by_user(username):
     '''
-    Devuelve todos los incomes donde user == username.
-    (Opcional: ordenar por fecha si hace falta)
+    Recibe username de tipo str.
+    Devuelve una lista con todos los ingresos (incomes) donde el campo "user" coincide con username.
+    Si no hay coincidencias, devuelve una lista vacía.
     '''
+    rows = _read_collection(INCOMES_FILE)
+    results = [row for row in rows if row.get("user") == username]
+    return results
 
 def incomes_find_by_id(income_id):
     '''
-    Busca un income por id.
+    Recibe income_id de tipo str.
+    Busca un income por id dentro de la colección de incomes.
     Devuelve el dict o None.
     '''
+    rows = _read_collection(INCOMES_FILE)
+    for row in rows:
+        if str(row.get("id")) == str(income_id):
+            return row
+    return None
 
 ### Expenses
 def expenses_insert(expense):
