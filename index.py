@@ -48,24 +48,6 @@ users = [
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
 
-# ? Esto se va a deprecar con el uso de la "base de datos en json"
-incomes = [
-    # Datos de prueba para el usuario 'admin'
-    {"id": "1001", "amount": 50000.0, "category": "Salario", "date": "05/06/2024", "user": "admin"},
-    {"id": "1002", "amount": 5000.0, "category": "Regalo", "date": "15/06/2024", "user": "admin"},
-    {"id": "1003", "amount": 52000.0, "category": "Salario", "date": "05/07/2024", "user": "admin"},
-]
-
-# ? Esto se va a deprecar con el uso de la "base de datos en json"
-expenses = [
-    # Datos de prueba para el usuario 'admin'
-    {"id": "2001", "amount": 10000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
-    {"id": "2001", "amount": 15000.0, "category": "Supermercado", "date": "15/06/2024", "user": "admin"},
-    {"id": "2003", "amount": 12000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
-    {"id": "2003", "amount": 2000.0, "category": "Otros", "date": "10/06/2024", "user": "admin"},
-    {"id": "2002", "amount": 3000.0, "category": "Transporte", "date": "20/06/2024", "user": "admin"},
-    {"id": "2004", "amount": 105000.0, "category": "Vivienda", "date": "15/06/2024", "user": "admin"},
-]
 
 # ABM INGRESOS
 def insertIncome(income):
@@ -252,7 +234,7 @@ def choose_category(categories):
 
 
 
-##metricas
+## Metricas
 def convert_to_tuple(date_str):
     '''
     Convierte un string "dd/mm/yyyy" en una tupla (day, month, year) de enteros.
@@ -288,18 +270,16 @@ def calculate_monthly_savings(username, month, year):
     - Devuelve float (positivo/negativo/0.0).
     '''
     total_in = 0.0
-    for inc in incomes:
-        if inc.get("user") == username:
-            parsed = convert_to_tuple(inc.get("date"))
-            if parsed and (parsed[1], parsed[2]) == (month, year):
-                total_in = total_in + float(inc.get("amount", 0.0))
+    for inc in incomes_by_user(username):
+        parsed = convert_to_tuple(inc.get("date"))
+        if parsed and (parsed[1], parsed[2]) == (month, year):
+            total_in = total_in + float(inc.get("amount", 0.0))
 
     total_out = 0.0
-    for exp in expenses:
-        if exp.get("user") == username:
-            parsed = convert_to_tuple(exp.get("date"))
-            if parsed and (parsed[1], parsed[2]) == (month, year):
-                total_out = total_out + float(exp.get("amount", 0.0))
+    for exp in  expenses_by_user(username):
+        parsed = convert_to_tuple(exp.get("date"))
+        if parsed and (parsed[1], parsed[2]) == (month, year):
+            total_out = total_out + float(exp.get("amount", 0.0))
 
     return total_in - total_out
 
@@ -342,19 +322,17 @@ def average_expense_by_category(username, month, year):
     category_totals = {}
     total_expenses = 0.0
         
-    for exp in expenses:
-        if exp.get("user") == username:
-            parsed = convert_to_tuple(exp.get("date"))
-            if parsed:
-                if (parsed[1] == month and parsed[2] == year):
-                    cat = exp.get("category", "otros")
-                    amount = exp.get("amount")
-                    
-                    if cat in category_totals:
-                        category_totals[cat] = category_totals[cat] + amount
-                    else:
-                        category_totals[cat] = amount
-                    total_expenses += amount
+    for exp in expenses_by_user(username):
+        parsed = convert_to_tuple(exp.get("date"))
+        if parsed:
+            if (parsed[1] == month and parsed[2] == year):
+                cat = exp.get("category", "otros")
+                amount = exp.get("amount")
+                if cat in category_totals:
+                    category_totals[cat] = category_totals[cat] + amount
+                else:
+                    category_totals[cat] = amount
+                total_expenses += amount
     
     percentages = {}
     if total_expenses > 0:
