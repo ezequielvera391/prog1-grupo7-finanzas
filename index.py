@@ -6,12 +6,10 @@ from db import (
     incomes_update, 
     incomes_delete, 
     incomes_by_user, 
-    incomes_find_by_id,
     expenses_insert, 
     expenses_update, 
     expenses_delete, 
     expenses_by_user, 
-    expenses_find_by_id,
 )
 import getpass
 import random
@@ -72,93 +70,86 @@ expenses = [
 # ABM INGRESOS
 def insertIncome(income):
     '''
-    Este método recibe un ingreso, se asegura que sea un ingreso válido
-    y lo inserta en la lista de ingresos
+    Este método recibe un ingreso de tipo dict
+    y lo inserta en la lista de ingresos a través de un 
+    En caso de una funcion de db.py
+    Devuelve True en caso de éxito, False en caso de error
     '''
-    if income.get("amount") <= 0:
-        return False
-    
-    incomes.append(income)
-    return True
+    ok, _ = incomes_insert(income)
+    return ok
 
 
 def updateIncome(income):
     '''
-    Este método recibe un ingreso, se asegura que sea un ingreso válido y que exista en la lista de ingresos
-    reemplaza el ingreso anterior con el nuevo
+    Este método recibe un ingreso de tipo dict
+    Realiza el update a ravés de una funcion de db.py
+    Reemplaza el ingreso anterior con el nuevo
+    Devuelve True en caso de éxito, False en caso de error
     '''
-    for i in range(len(incomes)):
-        if incomes[i].get("id") == income.get("id"):
-            incomes[i] = income
-            return True
-    return False
+    ok, _ = incomes_update(income)
+    return ok
 
 def deleteIncome(income):
     '''
-    Este método recibe el id de un ingreso, se asegura que exista en la lista de ingresos
-    elimina el ingreso correspondiente al id
+    Este método recibe un income de tipo dict, 
+    Extrae el id y borra en base de datos el valor de income que coincida con ese id
+    Esto lo hace a través de una funcion de db.py
+    Devuelve True en caso de éxito, False en caso de error
     '''
-    for i in range(len(incomes)):
-        if incomes[i].get("id") == income.get("id"):
-            incomes.pop(i)
-            return True
-    return False
+    income_id = income.get("id")
+    ok, _ = incomes_delete(income_id)
+    return ok
     
 
 def getIncomesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y filtra la lista 
-    para devolver todos los ingresos de ese usuario.
+    Este método recibe el nombre de un usuario de tipo str
+    Usa una función de db.py que busca todos los incomes pertenecientes a ese usuario
+    Devuelve una lista de incomes, si el usuario no existe o no tiene incomes devuelve una lista vacia
     '''
-    found_incomes = list(filter(lambda income: income.get("user") == username, incomes))
-
-    return found_incomes
+    return incomes_by_user(username)
 
 
 # ABM EGRESOS
 def insertExpenses(expense):
     '''
-        Este método recibe un egreso, se asegura que sea un egreso válido
-        y lo inserta en la lista de egresos
+    Este método recibe un egreso de tipo dict
+    y lo inserta en la base de datos a través de una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    if expense.get("amount") <= 0:
-        return False
-    
-    expenses.append(expense)
-    return True
+    ok, _ = expenses_insert(expense)
+    return ok
     
 
 def updateExpenses(expense):
     '''
-    Este método recibe un egreso, se asegura que sea un egreso válido y que exista en la lista de egresos
-    reemplaza el egreso anterior con el nuevo
+    Este método recibe un egreso de tipo dict.
+    Realiza el update a través de una función de db.py,
+    reemplazando el egreso anterior con el nuevo (mismo id).
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(expenses)):
-        if expenses[i].get("id") == expense.get("id"):
-            expenses[i] = expense
-            return True
-    return False
+    ok, _ = expenses_update(expense)
+    return ok
 
 def deleteExpenses(expense):
     '''
-    Este método recibe el id de un egreso, se asegura que exista en la lista de egreso
-    elimina el egreso correspondiente al id
+    Este método recibe un egreso de tipo dict,
+    extrae el id y borra en base de datos el egreso que coincida con ese id,
+    utilizando una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(expenses)):
-        if expenses[i].get("id") == expense.get("id"):
-            expenses.pop(i)
-            return True
-    return False
+    expense_id = expense.get("id")
+    ok, _ = expenses_delete(expense_id)
+    return ok
 
 def getExpensesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y filtra la lista 
-    para devolver todos los agresos de ese usuario.
+    Este método recibe el nombre de usuario de tipo str.
+    Usa una función de db.py que busca todos los egresos pertenecientes a ese usuario.
+    Devuelve una lista de egresos; si el usuario no existe o no tiene egresos,
+    devuelve una lista vacía.
     '''
-    found_expenses = list(filter(lambda expense: expense.get("user") == username, expenses))
-
-    return found_expenses
-
+    return expenses_by_user(username)
 # AUTH
 def login(username, password):
     '''
