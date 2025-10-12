@@ -1,3 +1,18 @@
+from db import (
+    ensure_db_files,
+    income_categories, 
+    expense_categories,
+    incomes_insert, 
+    incomes_update, 
+    incomes_delete, 
+    incomes_by_user, 
+    incomes_find_by_id,
+    expenses_insert, 
+    expenses_update, 
+    expenses_delete, 
+    expenses_by_user, 
+    expenses_find_by_id,
+)
 import getpass
 import random
 
@@ -5,10 +20,6 @@ import random
 
 ## BASE DE DATOS
 ## Defino acá el path para los distintos archivos que van a representar las colecciones de mi base de datos
-DB_DIR = "./data"
-USERS_FILE = f"{DB_DIR}/users.json"
-INCOMES_FILE = f"{DB_DIR}/incomes.json"
-EXPENSES_FILE = f"{DB_DIR}/expenses.json"
 
 ## Para el primer MVP vamos a tener un único usuario harcodeado, solo vamos a implementar el login
 # Lista de usuarios, los usarios tienen las siguientes propiedades:
@@ -39,15 +50,15 @@ users = [
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
 
-
+# ? Esto se va a deprecar con el uso de la "base de datos en json"
 incomes = [
     # Datos de prueba para el usuario 'admin'
     {"id": "1001", "amount": 50000.0, "category": "Salario", "date": "05/06/2024", "user": "admin"},
     {"id": "1002", "amount": 5000.0, "category": "Regalo", "date": "15/06/2024", "user": "admin"},
     {"id": "1003", "amount": 52000.0, "category": "Salario", "date": "05/07/2024", "user": "admin"},
 ]
-income_categories = ["Salario", "Regalo", "Otros"]
 
+# ? Esto se va a deprecar con el uso de la "base de datos en json"
 expenses = [
     # Datos de prueba para el usuario 'admin'
     {"id": "2001", "amount": 10000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
@@ -57,7 +68,6 @@ expenses = [
     {"id": "2002", "amount": 3000.0, "category": "Transporte", "date": "20/06/2024", "user": "admin"},
     {"id": "2004", "amount": 105000.0, "category": "Vivienda", "date": "15/06/2024", "user": "admin"},
 ]
-expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 
 # ABM INGRESOS
 def insertIncome(income):
@@ -502,140 +512,6 @@ def expenses_menu(current_username):
 
 
 ## BASES DE DATOS ##
-### Generales
-def read_collection(file_path):
-    '''
-    Recibe un string que es el path donde va a buscar el archivo de base de datos
-    Devuelve la lista del documento o [] si no existe o está vacio
-    '''
-
-def next_id_from_collection(file_path, id_field="id"):
-    '''
-    Recibe el path de una coleccion, y opcionalmente un string con el nombre del campo de id que debe modificar (por defecto "id")
-    Calcula el valor del siguiente id (id max de la colleccion + 1), si la coleccion no tiene elementos retorna 1.
-    '''
-
-### Usuarios 
-def users_insert(user):
-    '''
-    Verifica que el usuario que se intenta ingresar no exista ya en base de datos
-    De no existir lo ingresa, sino envía un error
-    '''
-
-def users_update(user):
-    '''
-    Recibe un usuario, busca que exista el nombre de usuario y el id
-    En caso de existir lo actualiza, sino envía un error.
-    '''
-
-def users_delete(user_id):
-    '''
-    Recibe el id de un usuario, busca que exista.
-    En caso de existir lo elimina, sino envía un error.
-    '''
-
-def users_find_by_name(name):
-    '''
-    Recibe el nombre de un usuario, busca que exista.
-    En caso de existir lo devuelve completo, sino envía un error.
-    '''
-
-def login_check(username, password):
-    '''
-    Recibe un usuario y contraseña, 
-    verifica que el usuario exista y luego que la contraseña ingresada coincida con la que está guardada para ese usuario
-    En caso de éxito devuelve True, sino devuelve False
-    '''
-
-### Incomes
-
-def incomes_insert(income):
-    '''
-    Recibe un ingreso y lo guarda en incomes.json.
-    Chequeos básicos:
-    - amount > 0
-    - category en income_categories
-    - formato de fecha
-    - user existe en users.json
-    Se asigna id Auto-incremental (max(id)+1).
-    Devuelve (True, income_final) o (False, "motivo").
-    '''
-
-def incomes_update(income):
-    '''
-    Actualiza un ingreso existente (mismo id).
-    Aplica los mismos chequeos que el insert.
-    Devuelve (True, None) o (False, "motivo").
-    '''
-
-def incomes_delete(income_id):
-    '''
-    Borra un ingreso por id de incomes.json.
-    Devuelve (True, None) o (False, "no existe").
-    '''
-
-def incomes_by_user(username):
-    '''
-    Devuelve todos los incomes donde user == username.
-    (Opcional: ordenar por fecha si hace falta)
-    '''
-
-def incomes_find_by_id(income_id):
-    '''
-    Busca un income por id.
-    Devuelve el dict o None.
-    '''
-
-### Expenses
-def expenses_insert(expense):
-    '''
-    Recibe un egreso y lo guarda en expenses.json.
-    Chequeos básicos:
-    - amount > 0
-    - category en expense_categories
-    - formato de fecha
-    - user existe en users.json
-    Se asigna id Auto-incremental (max(id)+1)
-    Devuelve (True, expense_final) o (False, "motivo").
-    '''
-
-def expenses_update(expense):
-    '''
-    Actualiza un egreso existente (mismo id).
-    Mismos chequeos que el insert.
-    Devuelve (True, None) o (False, "motivo").
-    '''
-
-def expenses_delete(expense_id):
-    '''
-    Borra un egreso por id de expenses.json.
-    Devuelve (True, None) o (False, "no existe").
-    '''
-
-def expenses_by_user(username):
-    '''
-    Devuelve todos los expenses donde user == username.
-    (Opcional: ordenar por fecha si hace falta)
-    '''
-
-def expenses_find_by_id(expense_id):
-    '''
-    Busca un expense por id.
-    Devuelve el dict o None.
-    '''
-
-### Boostrap DDBB
-def ensure_db_files():
-    '''
-    Crea ./data si no existe y asegura que existan:
-    - users.json
-    - incomes.json
-    - expenses.json
-    Si falta alguno, lo inicializa con [].
-    No imprime ni pide input. Es solo para inicializar la bbdd en caso de que no exista
-    '''
-
-
 
 def metrics_menu(current_username):
     options = [
@@ -794,4 +670,5 @@ def main():
 
 
 #### INICIO DE PROGRAMA
+ensure_db_files()
 main()
