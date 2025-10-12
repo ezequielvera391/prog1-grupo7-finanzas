@@ -11,6 +11,7 @@ income_categories = ["Salario", "Regalo", "Otros"]
 expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 
 ### Generales
+## Privadas
 def _collection_path(name):
     lower = str(name).strip().lower()
     if lower == "users":
@@ -26,13 +27,14 @@ def _read_collection(file_path):
     try:
         if not os.path.exists(file_path):
             return []
-        with open(file_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
             return data if isinstance(data, list) else []
     except Exception:
         return []
 
 def _next_id_from_collection(file_path, id_field="id"):
+    # TODO: podría guardar un json de contadores con el último valor de id de cáda colección para evitar recorrer las colecciones 
     rows = _read_collection(file_path)
     max_id = 0
     for row in rows:
@@ -44,10 +46,29 @@ def _next_id_from_collection(file_path, id_field="id"):
             print("ERROR: el campo id no es numerico.")
     return str(max_id + 1)
 
+# TODO: esto podría ser una función pública de un módulo de útils para toda la app
+def _is_valid_date(date_str):
+    """
+    Recibe un date_str de tipo str
+    Valida que la fecha tenga formato dd/mm/yyyy y valores superiores o iguales a 1/1/1900.
+    Devuelve True si es válida, False en caso contrario.
+    """
+    try:
+        d, m, y = date_str.split("/")
+        d, m, y = int(d), int(m), int(y)
+        if 1 <= d <= 31 and 1 <= m <= 12 and y > 1900:
+            return True
+        return False
+    except Exception:
+        return False
+
+## Publicas
 def read_collection_by_name(name):
     """
-    Lee una colección por nombre ('users' | 'incomes' | 'expenses').
-    Si el nombre es inválido, devuelve [].
+    Recibe un name de formato string 
+    Lee una colección con ese name, los name validos son: 'users' | 'incomes' | 'expenses'.
+    Si el name es inválido, devuelve [].
+    Si el name es válido devuelve la colección con dicho nombre
     """
     path = _collection_path(name)
     if path is None:
@@ -141,6 +162,46 @@ def expenses_insert(expense):
     Devuelve (True, expense_final) o (False, "motivo").
     '''
 
+    ## Validaciones
+    try:
+        amount = float(expense.get("amount", 0))
+    except (TypeError, ValueError):
+        return (False, "amount debe ser numérico")
+    
+    if amount <= 0:
+        return (False, "amount debe ser > 0")
+    
+    category = expense.get("category")
+    if category not in expense_categories:
+        return (False, "category inválida")
+    
+    if not _is_valid_date(expense.get("date")):
+        return (False, "fecha inválida (usar dd/mm/yyyy)")
+    
+    # Valida que el usuario que intenta insertar exista en la lista de usuarios registrados
+    users = _read_collection(USERS_FILE)
+    if not any(user.get("name") == expense.get("user") for user in users): 
+        return (False, "user no existe")
+    
+    # Leer colección y calcular próximo id
+    rows = _read_collection(EXPENSES_FILE)
+    new_id = _next_id_from_collection(EXPENSES_FILE)
+
+    expense_final = {
+        "id": new_id,
+        "amount": amount,
+        "category": category,
+        "date": expense.get("date"),
+        "user": expense.get("user")
+    }
+
+    # Guardar en base de datos
+    rows.append(expense_final)
+    with open(EXPENSES_FILE, "w", encoding="utf-8") as file:
+        json.dump(rows, file, ensure_ascii=False, indent=2)
+
+    return (True, expense_final)
+
 def expenses_update(expense):
     '''
     Actualiza un egreso existente (mismo id).
@@ -180,8 +241,8 @@ def ensure_db_files():
 
     for path in (USERS_FILE, INCOMES_FILE, EXPENSES_FILE):
         if not os.path.exists(path):
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump([], f, ensure_ascii=False)
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump([], file, ensure_ascii=False)
 
 
 ### EXPORTS ### 
