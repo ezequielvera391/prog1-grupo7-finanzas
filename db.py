@@ -46,6 +46,24 @@ def _next_id_from_collection(file_path, id_field="id"):
             print("ERROR: el campo id no es numerico.")
     return str(max_id + 1)
 
+def _find_row_index(file_path, id_value, id_field="id"):
+    """
+    Recibe un file_path que es un str con el valor del path de la colección donde vamos a buscar
+    Tambien recibe un id_value que es el valor del id que estamos buscando
+    Y por último de forma opcional recibe un id_field que es un str que define como se llama el campo id en la colección, por defecto 'id'
+    Devuelve el índice del primer registro cuyo id == id_value.
+    Si no existe, devuelve None.
+    """
+    rows = _read_collection(file_path)
+    for i, row in enumerate(rows):
+        if str(row.get(id_field, "")) == str(id_value):
+            return i
+    return None
+
+def _write_collection(file_path, rows):
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(rows, f, ensure_ascii=False, indent=2)
+
 # TODO: esto podría ser una función pública de un módulo de útils para toda la app
 def _is_valid_date(date_str):
     """
@@ -207,8 +225,7 @@ def incomes_insert(income):
     }
 
     rows.append(income_final)
-    with open(INCOMES_FILE, "w", encoding="utf-8") as file:
-        json.dump(rows, file, ensure_ascii=False, indent=2)
+    _write_collection(INCOMES_FILE, rows)
 
     return (True, income_final)
 
@@ -229,7 +246,7 @@ def incomes_update(income):
         return (False, "no hay registros en incomes.json")
 
     # Buscar índice del registro a actualizar
-    index = next((i for i, row in enumerate(rows) if str(row.get("id")) == str(income_id)), None)
+    index = _find_row_index(INCOMES_FILE, income_id)
     if index is None:
         return (False, f"no existe ingreso con id {income_id}")
 
@@ -244,9 +261,7 @@ def incomes_update(income):
         "date": income.get("date"),
         "user": income.get("user")
     }
-
-    with open(INCOMES_FILE, "w", encoding="utf-8") as file:
-        json.dump(rows, file, ensure_ascii=False, indent=2)
+    _write_collection(INCOMES_FILE, rows)
 
     return (True, None)
 
@@ -264,8 +279,7 @@ def incomes_delete(income_id):
     if len(updated_rows) == len(rows):
         return (False, "El ingreso que intenta borrar no existe")
 
-    with open(INCOMES_FILE, "w", encoding="utf-8") as file:
-        json.dump(updated_rows, file, ensure_ascii=False, indent=2)
+    _write_collection(INCOMES_FILE, updated_rows)
 
     return (True, "El ingreso fue borrado satisfactoriamente")
 
@@ -278,18 +292,6 @@ def incomes_by_user(username):
     rows = _read_collection(INCOMES_FILE)
     results = [row for row in rows if row.get("user") == username]
     return results
-
-def incomes_find_by_id(income_id):
-    '''
-    Recibe income_id de tipo str.
-    Busca un income por id dentro de la colección de incomes.
-    Devuelve el dict o None.
-    '''
-    rows = _read_collection(INCOMES_FILE)
-    for row in rows:
-        if str(row.get("id")) == str(income_id):
-            return row
-    return None
 
 ### Expenses
 def expenses_insert(expense):
@@ -323,8 +325,7 @@ def expenses_insert(expense):
 
     # Guardar en base de datos
     rows.append(expense_final)
-    with open(EXPENSES_FILE, "w", encoding="utf-8") as file:
-        json.dump(rows, file, ensure_ascii=False, indent=2)
+    _write_collection(EXPENSES_FILE, rows)
 
     return (True, expense_final)
 
@@ -349,9 +350,7 @@ def expenses_update(expense):
     if not rows:
         return (False, "no hay registros en expenses.json")
 
-    # Para cada i, row en rows, si el id del row coincide con expense_id, devuelve ese i; si no hay coincidencias, devuelve None.
-    # En otras palabras, devuelve el primer indice de rows que coincida con expense_id
-    index = next((i for i, row in enumerate(rows) if str(row.get("id")) == str(expense_id)), None)
+    index = _find_row_index(EXPENSES_FILE, expense_id)
     if index is None:
         return (False, f"no existe egreso con id {expense_id}")
 
@@ -370,8 +369,7 @@ def expenses_update(expense):
     }
 
     # Guardar en disco
-    with open(EXPENSES_FILE, "w", encoding="utf-8") as f:
-        json.dump(rows, f, ensure_ascii=False, indent=2)
+    _write_collection(EXPENSES_FILE, rows)
 
     return (True, None)
 
@@ -391,8 +389,7 @@ def expenses_delete(expense_id):
         return (False, "El egreso que intenta borrar no existe")
 
     # Guardar cambios
-    with open(EXPENSES_FILE, "w", encoding="utf-8") as file:
-        json.dump(updated_rows, file, ensure_ascii=False, indent=2)
+    _write_collection(EXPENSES_FILE, updated_rows)
 
     return (True, "El egreso fue borrado satisfactoriamente")
     
@@ -406,18 +403,6 @@ def expenses_by_user(username):
     rows = _read_collection(EXPENSES_FILE)
     results = [row for row in rows if row.get("user") == username]
     return results
-
-def expenses_find_by_id(expense_id):
-    '''
-    Recibe expense_id de tipo str.
-    Busca un expense por id.
-    Devuelve el dict o None.
-    '''
-    rows = _read_collection(EXPENSES_FILE)
-    for row in rows:
-        if str(row.get("id")) == str(expense_id):
-            return row
-    return None
 
 ### Boostrap DDBB
 def ensure_db_files():
@@ -455,14 +440,14 @@ __all__ = [
     "incomes_update",
     "incomes_delete",
     "incomes_by_user",
-    "incomes_find_by_id",
 
     # Expenses
     "expenses_insert",
     "expenses_update",
     "expenses_delete",
     "expenses_by_user",
-    "expenses_find_by_id",
+
+    # TODO: Users
 
     # Utils / Setup
     "ensure_db_files"
