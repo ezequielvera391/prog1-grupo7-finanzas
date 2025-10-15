@@ -60,13 +60,14 @@ expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 # - saved_amount: float (Monto total que decide guardar el usuario)
 # - start_date: "dd/mm/yyyy" (fecha inicio)
 # - end_date: "dd/mm/yyyy" (fecha final)
+# - status: string (Puede tomar los valores de "Iniciado", "En proceso" y "Completado")
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 
 goals = [
     # Datos de prueba para el usuario 'admin'
-    {"id": "1001", "category": "Viaje", "total_amount": 25000.0, "saved_amount": 23000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "user": "admin" },
-    {"id": "1002", "category": "Vivienda", "total_amount": 150000.0, "saved_amount": 40000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "user": "admin" },
-    {"id": "1003", "category": "Otros", "total_amount": 50000.0, "saved_amount": 10000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "user": "admin" },
+    {"id": "1001", "category": "Viaje", "total_amount": 25000.0, "saved_amount": 23000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "status": "Iniciado", "user": "admin"},
+    {"id": "1002", "category": "Vivienda", "total_amount": 150000.0, "saved_amount": 40000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
+    {"id": "1003", "category": "Otros", "total_amount": 50000.0, "saved_amount": 10000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
 ]
 goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
 
@@ -160,6 +161,72 @@ def getExpensesByUser(username):
 
     return found_expenses
 
+# ABM OBJETIVOS DE AHORRO
+def insertGoals(goal):
+    '''
+        Este método recibe un objetivo de ahorro, se asegura que sea un objetivo válido
+        y lo inserta en la lista de objetivos de ahorros.
+
+        Devuelve un número de error o 0 si se insertó correctamente.
+
+        0 = OK
+        1 = Monto objetivo (<= 0)
+        2 = Monto guardado (< 0)
+        3 = Fecha final anterior a fecha de inicio
+    '''
+    
+    # Validar monto total del objetivo
+    if goal.get("total_amount") <= 0:
+        return 1
+
+    # Validar monto a guardar del objetivo
+    if goal.get("saved_amount") > goal.get("total_amount"):
+        return 2
+
+    # Validar fecha final del objetivo
+    goal_start_date = goal.get("start_date")
+    goal_end_date = goal.get("end_date")
+
+    fecha_inicio_goal = convert_to_tuple(goal_start_date)
+    fecha_fin_goal = convert_to_tuple(goal_end_date)
+
+    if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
+        return 3
+   
+    # Si todas las validaciones pasan insertar en lista
+    goals.append(goal)
+    return 0 
+
+def updateGoals(goal):
+    '''
+    Este método recibe un objetivo de ahorro, se asegura que sea un objetivo de ahorro válido y que exista en la lista de objetivos de ahorro reemplaza el objetivo de ahorro anterior con el nuevo
+    '''
+    for i in range(len(goals)):
+        if goals[i].get("id") == goal.get("id"):
+            goals[i] = goal
+            return True
+    return False
+
+def deleteGoals(goal):
+    '''
+    Este método recibe el id de un objetivo de ahorrro, se asegura que exista en la lista de objetivos de ahorro
+    elimina el objetivo de ahorrro correspondiente al id
+    '''
+    for i in range(len(goals)):
+        if goals[i].get("id") == goal.get("id"):
+            goals.pop(i)
+            return True
+    return False
+
+def getGoalsByUser(username):
+    '''
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los objetivos de ahorro de ese usuario.
+    '''
+    found_goals = list(filter(lambda goal: goal.get("user") == username, goals))
+    print(found_goals)
+
+    return found_goals
 # AUTH
 def login(username, password):
     '''
@@ -374,43 +441,6 @@ def average_expense_by_category(username, month, year):
     return percentages 
 
 
-# ABM OBJETIVOS DE AHORRO
-def insertGoals(goal):
-    '''
-        Este método recibe un objetivo de ahorro, se asegura que sea un objetivo válido
-        y lo inserta en la lista de objetivos de ahorros.
-
-        Devuelve un número de error o 0 si se insertó correctamente.
-
-        0 = OK
-        1 = Monto objetivo (<= 0)
-        2 = Monto guardado (<= 0)
-        3 = Fecha final anterior a fecha de inicio
-    '''
-    
-    # Validar monto total del objetivo
-    if goal.get("total_amount") <= 0:
-        return 1
-
-    # Validar monto a guardar del objetivo
-    if goal.get("save_amount") < 0:
-        return 2
-
-    # Validar fecha final del objetivo
-    goal_start_date = goal.get("start_date")
-    goal_end_date = goal.get("end_date")
-
-    fecha_inicio_goal = convert_to_tuple(goal_start_date)
-    fecha_fin_goal = convert_to_tuple(goal_end_date)
-
-    if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
-        return 3
-   
-    # Si todas las validaciones pasan insertar en lista
-    goals.append(goal)
-    return 0 
-
-    
 ### Menus
 def incomes_menu(current_username):
     options = [
@@ -668,7 +698,7 @@ def metrics_menu(current_username):
 def goals_menu(current_username):
     options = [
         "Agregar objetivo de ahorro",
-        "Actualizar objetivo de ahorro",
+        "Modificar objetivo de ahorro",
         "Eliminar objetivo de ahorro",
         "Listar todos mis objetivo de ahorros",
         "Volver"
@@ -681,19 +711,22 @@ def goals_menu(current_username):
         # Crear objetivo de ahorro
         if selected == 1:
             goal_id = str(random.randint(1000, 9999))
+            print(goal_id)
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
-            goal_save_amount = input_float("Ingrese el monto que desea guardar: ")
+            goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
             goal_start_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) del inicio de su objetivo: ")
             goal_end_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) de finalizacion de su objetivo: ")
+            goal_status = "Iniciado"
 
             goal = {
                 "id": goal_id,
                 "category": goal_category,
                 "total_amount": goal_total_amount,
-                "save_amount": goal_save_amount,
+                "saved_amount": goal_saved_amount,
                 "start_date": goal_start_date,
                 "end_date": goal_end_date,
+                "status": goal_status,
                 "user": current_username
             }
 
@@ -704,9 +737,53 @@ def goals_menu(current_username):
             elif respuesta == 1:
                 print("Error: el monto total debe ser mayor a 0.")
             elif respuesta == 2:
-                print("Error: el monto guardado debe ser mayor o igual a 0.")
+                print("Error: el monto guardado no puede superar el monto total del objetivo")
             else:
                 print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+        # Modificar un objetivo de ahorro
+        elif selected == 2:
+            goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+            goal_category = choose_category(goal_categories)
+            goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
+            goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
+            goal_start_date = input_date("Nueve fecha incial (dd/mm/yyyy) de su objetivo: ")
+            goal_end_date = input_date("Nueve fecha final (dd/mm/yyyy) de su objetivo: ")
+            goal_status = "Iniciado"
+
+            goal = {
+                "id": goal_id,
+                "category": goal_category,
+                "total_amount": goal_total_amount,
+                "saved_amount": goal_saved_amount,
+                "start_date": goal_start_date,
+                "end_date": goal_end_date,
+                "status": goal_status,
+                "user": current_username
+            }
+
+            ok = updateGoals(goal)
+            print("Ingreso actualizado." if ok else "No se encontró el objetivo para actualizar.")
+        # Eliminar Objetivo de ahorro
+        elif selected == 3:
+            goal_id = input_non_empty("ID del egreso a eliminar: ")
+            ok = deleteGoals({"id": goal_id})
+            if ok:
+                print("Objetivo de ahorro eliminado.")
+            else:
+                print("No se encontró el objetivo de ahorro para eliminar.")
+        # Listar Objetivo de ahorro
+        elif selected == 4:
+            items = getGoalsByUser(current_username)
+            if not items:
+                print("No hay objetivos de ahorro para este usuario.")
+            else:
+                print("\nObjetivos de ahorro del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
+        # Volver al menú principal
+        elif selected == 5:
+            print("Volviendo al menú principal...")
 
 def main():
     '''
