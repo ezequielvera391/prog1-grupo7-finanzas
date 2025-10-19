@@ -168,14 +168,14 @@ def registrar_usuario(users, name, password, password2, age, genre, role="user")
     # Validar si el usuario ya existe
     if validar_existenciauser(users, name):
         print("El usuario ya existe. Intente con otro nombre.")
-        return users
-    False
+        return users,False
+    
 
     # Validar que las contraseñas coincidan
     if password != password2:
         print("Las contraseñas no coinciden. Intente nuevamente.")
-        return users 
-    False
+        return users,False
+    
 
     # Crear el nuevo usuario
     new_user = {
@@ -286,6 +286,30 @@ def input_date(message):
 
     return date_str
 
+def input_int(mensaje):#funcion para validar que el input sea un entero
+    valor = input(mensaje).strip()# otra vez  uso strip para quitar espacios en blanco al inicio y final si el user lo escribe
+    valido = False# uso  bandera para controlar el bucle
+    while not valido:# mientras no sea valido sigo pidiendo el valor
+        try: # intento convertir el valor a entero con el nuevo concepto que vimos en clase
+            valor_int = int(valor)
+            valido = True
+        except ValueError:
+            print("Debe ingresar un numero entero valido. Intente nuevamente.")
+            valor = input(mensaje).strip()
+    return valor_int
+
+def input_password(mensaje="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
+    pwd = getpass.getpass(mensaje).strip()
+    
+    if not pwd:
+        print("La contraseña no puede estar vacia, intente nuevamente.")
+        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña 
+    elif len(pwd) < min_length:
+        print(f"La contraseña debe tener al menos {min_length} caracteres.")
+        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña
+    else:
+        return pwd  # contraseña valida
+    
 def choose_category(categories):
     """
     Muestra un menú para elegir una categoría de la lista y devuelve el string elegido.
@@ -434,96 +458,47 @@ def main():
   
 #### INICIO DE PROGRAMA--------
 
-def input_non_empty(mensaje):  
-    valor = input(mensaje).strip()# use strip para quitar espacios en blanco al inicio y final si el user lo escribe
-    while not valor:# con el while not valido que el campo no este vacio 
-        print(" Este campo no puede estar vacio.")
-        valor = input(mensaje).strip()# si el campo esta vacio le vuelvo a pedir que ingrese el valor
-    return valor #  aqui retorno el valor ya validado
-
-def input_int(mensaje):#funcion para validar que el input sea un entero
-    valor = input(mensaje).strip()# otra vez  uso strip para quitar espacios en blanco al inicio y final si el user lo escribe
-    valido = False# uso  bandera para controlar el bucle
-    while not valido:# mientras no sea valido sigo pidiendo el valor
-        try: # intento convertir el valor a entero con el nuevo concepto que vimos en clase
-            valor_int = int(valor)
-            valido = True
-        except ValueError:
-            print("Debe ingresar un numero entero valido. Intente nuevamente.")
-            valor = input(mensaje).strip()
-    return valor_int
-
-
-def input_password(mensaje="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
-    pwd = getpass.getpass(mensaje).strip()
-    
-    if not pwd:
-        print("La contraseña no puede estar vacia, intente nuevamente.")
-        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña 
-    elif len(pwd) < min_length:
-        print(f"La contraseña debe tener al menos {min_length} caracteres.")
-        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña
-    else:
-        return pwd  # contraseña valida
-
-def input_opcion(mensaje, opciones):#funcion para validar que el input sea una opcion valida de una lista
-    valor = input(mensaje).lower().strip()# uso lower para que no importe si el user escribe en mayuscula o minuscula y strip para quitar espacios en blanco al inicio y final si el user lo escribe
-    valido = False# uso bandera para controlar el bucle
-    
-    while not valido:
-        for op in opciones:# recorro la lista de opciones
-            if valor == op.lower().strip():# comparo el valor ingresado con cada opcion de la lista
-                valido = True
-                break# si es valido salgo del for
-        
-        if not valido:# si no es valido le vuelvo a pedir que ingrese el valor
-            print("Opcion invalida. Debe ingresar una de las siguientes opciones:")
-            for op in opciones:
-                print("-", op)
-            valor = input(mensaje).lower().strip()
-    
-    return valor
 
 
 # --- FLUJO DE REGISTRO / LOGIN ---
 
-print("Bienvenido al sistema de finanzas.")
+    print("Bienvenido al sistema de finanzas.")
 
-while True:#uso un while True para repetir el flujo hasta que el user se registre o loguee correctamente
-    # nvuelvo a preguntar si ya tiene cuenta
-    tiene_cuenta = input_opcion("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
+    while True:#uso un while True para repetir el flujo hasta que el user se registre o loguee correctamente
+        # nvuelvo a preguntar si ya tiene cuenta
+        tiene_cuenta = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
+        
+        while tiene_cuenta == 2:
+            print("\n--- REGISTRO DE NUEVO USUARIO ---")
+            username = input_non_empty("Ingrese nombre de usuario: ")
 
-    while tiene_cuenta == "no":
-        print("\n--- REGISTRO DE NUEVO USUARIO ---")
-        username = input_non_empty("Ingrese nombre de usuario: ")
-
-        # Contraseña y confirmacion
-        password = input_password()
-        password2 = input_password("Confirme contraseña: ")
-        while password != password2:
-            print("Las contraseñas no coinciden. Intente nuevamente.")
-            password = input_password()#la vuelov a pedir
+            # Contraseña y confirmacion
+            password = input_password()
             password2 = input_password("Confirme contraseña: ")
+            while password != password2:
+                print("Las contraseñas no coinciden. Intente nuevamente.")
+                password = input_password()#la vuelov a pedir
+                password2 = input_password("Confirme contraseña: ")
 
-        # Edad y genero
-        age = input_int("Ingrese edad: ")
-        genre = input_opcion("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
+            # Edad y genero
+            age = input_int("Ingrese edad: ")
+            genre = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
 
-        # Intentar registrar usuario
-        users, exito = registrar_usuario(users, username, password, password2, age, genre)
-        if exito:
-            print(" Registro completado correctamente.")
-            break  # Salimos del while y continuamos al login
+            # Intentar registrar usuario
+            users_new, exito = registrar_usuario(users, username, password, password2, age, genre)
+            if exito:
+                print(" Registro completado correctamente.")
+                break  # Salimos del while y continuamos al login
+            else:
+                print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
+                # El while vuelve al inicio del registro automaticamente
+
         else:
-            print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
-            # El while vuelve al inicio del registro automaticamente
+            break  # Ya tiene cuenta, pasar al login
 
-    else:
-        break  # Ya tiene cuenta, pasar al login
-
-# --- LOGIN ---
-username = input_non_empty("Ingrese nombre de usuario: ")
-password = getpass.getpass("Ingrese contraseña: ")
+    # --- LOGIN ---
+    username = input_non_empty("Ingrese nombre de usuario: ")
+    password = getpass.getpass("Ingrese contraseña: ")
 
     # usar validar_userandpassword en lugar de login  #(Ayuda no se porque me da error en islogged)
     isLogged = validar_userandpassword(users, username, password) #llama a la funcion para validar usuario y contraseña
