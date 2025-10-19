@@ -33,10 +33,43 @@ users = [
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
 
 
-incomes = []
+incomes = [
+    # Datos de prueba para el usuario 'admin'
+    {"id": "1001", "amount": 50000.0, "category": "Salario", "date": "05/06/2024", "user": "admin"},
+    {"id": "1002", "amount": 5000.0, "category": "Regalo", "date": "15/06/2024", "user": "admin"},
+    {"id": "1003", "amount": 52000.0, "category": "Salario", "date": "05/07/2024", "user": "admin"},
+]
 income_categories = ["Salario", "Regalo", "Otros"]
-expenses = []
+
+expenses = [
+    # Datos de prueba para el usuario 'admin'
+    {"id": "2001", "amount": 10000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
+    {"id": "2001", "amount": 15000.0, "category": "Supermercado", "date": "15/06/2024", "user": "admin"},
+    {"id": "2003", "amount": 12000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
+    {"id": "2003", "amount": 2000.0, "category": "Otros", "date": "10/06/2024", "user": "admin"},
+    {"id": "2002", "amount": 3000.0, "category": "Transporte", "date": "20/06/2024", "user": "admin"},
+    {"id": "2004", "amount": 105000.0, "category": "Vivienda", "date": "15/06/2024", "user": "admin"},
+]
 expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
+
+## Objetivos de ahorro
+# hay lista de objetivos de ahorro, y tienen las siguientes propiedades
+# - id: string (debe ser único)
+# - category: categorias (vamos a definir un listado fijo de categorias de objetivos de ahorro)
+# - total_amount: float (Monto total del objetivo de ahorro)
+# - saved_amount: float (Monto total que decide guardar el usuario)
+# - start_date: "dd/mm/yyyy" (fecha inicio)
+# - end_date: "dd/mm/yyyy" (fecha final)
+# - status: string (Puede tomar los valores de "Iniciado", "En proceso" y "Completado")
+# - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
+
+goals = [
+    # Datos de prueba para el usuario 'admin'
+    {"id": "1001", "category": "Viaje", "total_amount": 25000.0, "saved_amount": 23000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "status": "Iniciado", "user": "admin"},
+    {"id": "1002", "category": "Vivienda", "total_amount": 150000.0, "saved_amount": 40000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
+    {"id": "1003", "category": "Otros", "total_amount": 50000.0, "saved_amount": 10000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
+]
+goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
 
 # ABM INGRESOS
 def insertIncome(income):
@@ -76,12 +109,11 @@ def deleteIncome(income):
 
 def getIncomesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y busca en la lista todos los incomes que hayan sido ingresados por ese usuario
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los ingresos de ese usuario.
     '''
-    found_incomes = []
-    for income in incomes:
-        if income.get("user") == username:
-            found_incomes.append(income)
+    found_incomes = list(filter(lambda income: income.get("user") == username, incomes))
+
     return found_incomes
 
 
@@ -122,14 +154,79 @@ def deleteExpenses(expense):
 
 def getExpensesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y busca en la lista todos los egresos que hayan sido ingresados por ese usuario
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los agresos de ese usuario.
     '''
-    found_expenses = []
-    for expense in expenses:
-        if expense.get("user") == username:
-            found_expenses.append(expense)
+    found_expenses = list(filter(lambda expense: expense.get("user") == username, expenses))
+
     return found_expenses
 
+# ABM OBJETIVOS DE AHORRO
+def insertGoals(goal):
+    '''
+        Este método recibe un objetivo de ahorro, se asegura que sea un objetivo válido
+        y lo inserta en la lista de objetivos de ahorros.
+
+        Devuelve un número de error o 0 si se insertó correctamente.
+
+        0 = OK
+        1 = Monto objetivo (<= 0)
+        2 = Monto guardado (< 0)
+        3 = Fecha final anterior a fecha de inicio
+    '''
+    
+    # Validar monto total del objetivo
+    if goal.get("total_amount") <= 0:
+        return 1
+
+    # Validar monto a guardar del objetivo
+    if goal.get("saved_amount") > goal.get("total_amount"):
+        return 2
+
+    # Validar fecha final del objetivo
+    goal_start_date = goal.get("start_date")
+    goal_end_date = goal.get("end_date")
+
+    fecha_inicio_goal = convert_to_tuple(goal_start_date)
+    fecha_fin_goal = convert_to_tuple(goal_end_date)
+
+    if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
+        return 3
+   
+    # Si todas las validaciones pasan insertar en lista
+    goals.append(goal)
+    return 0 
+
+def updateGoals(goal):
+    '''
+    Este método recibe un objetivo de ahorro, se asegura que sea un objetivo de ahorro válido y que exista en la lista de objetivos de ahorro reemplaza el objetivo de ahorro anterior con el nuevo
+    '''
+    for i in range(len(goals)):
+        if goals[i].get("id") == goal.get("id"):
+            goals[i] = goal
+            return True
+    return False
+
+def deleteGoals(goal):
+    '''
+    Este método recibe el id de un objetivo de ahorrro, se asegura que exista en la lista de objetivos de ahorro
+    elimina el objetivo de ahorrro correspondiente al id
+    '''
+    for i in range(len(goals)):
+        if goals[i].get("id") == goal.get("id"):
+            goals.pop(i)
+            return True
+    return False
+
+def getGoalsByUser(username):
+    '''
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los objetivos de ahorro de ese usuario.
+    '''
+    found_goals = list(filter(lambda goal: goal.get("user") == username, goals))
+    print(found_goals)
+
+    return found_goals
 # AUTH
 def login(username, password):
     '''
@@ -149,7 +246,7 @@ def getUser(username):
     devuelve -1 en caso de no encontrarlo
     '''
     for user in users:
-        if user["username"] == username:
+        if user["name"] == username:
             return user
     return -1
 
@@ -317,6 +414,120 @@ def choose_category(categories):
     idx = get_menu_option("Elija una categoría", categories)
     return categories[idx - 1]
 
+
+
+##metricas
+def convert_to_tuple(date_str):
+    '''
+    Convierte un string "dd/mm/yyyy" en una tupla (day, month, year) de enteros.
+    - Si la fecha no tiene el formato correcto o valores fuera de rango, devuelve None.
+    '''
+    parts = date_str.split("/")
+    if len(parts) != 3:
+        return None
+
+    day_str, month_str, year_str = parts[0], parts[1], parts[2]
+
+    if (not day_str.isdigit()) or (not month_str.isdigit()) or (not year_str.isdigit()):
+        return None
+
+    day = int(day_str)
+    month = int(month_str)
+    year = int(year_str)
+
+    if day < 1 or day > 31:
+        return None
+    if month < 1 or month > 12:
+        return None
+    if year <= 1900:
+        return None
+    
+    return (day, month, year)
+
+
+def calculate_monthly_savings(username, month, year):
+    '''
+    -Calcula el ahorro (ingresos - egresos) del usuario `username`
+    para el mes `month` y año `year`.
+    - Devuelve float (positivo/negativo/0.0).
+    '''
+    total_in = 0.0
+    for inc in incomes:
+        if inc.get("user") == username:
+            parsed = convert_to_tuple(inc.get("date"))
+            if parsed and (parsed[1], parsed[2]) == (month, year):
+                total_in = total_in + float(inc.get("amount", 0.0))
+
+    total_out = 0.0
+    for exp in expenses:
+        if exp.get("user") == username:
+            parsed = convert_to_tuple(exp.get("date"))
+            if parsed and (parsed[1], parsed[2]) == (month, year):
+                total_out = total_out + float(exp.get("amount", 0.0))
+
+    return total_in - total_out
+
+
+def percent_change_in_savings(username, month1, year1, month2, year2):
+    '''
+    Calcula el porcentaje de aumento/disminución del ahorro
+    entre el período (month1, year1) y (month2, year2).
+    - Fórmula: ((s2 - s1) / |s1|) * 100
+    - Si s1 == 0.0 y s2 == 0.0 -> devuelve 0.0
+    - Si s1 == 0.0 y s2 != 0.0 -> devuelve None 
+    - Devuelve float (porcentaje) o None si no se puede calcular.
+    '''
+    s1 = calculate_monthly_savings(username, month1, year1)
+    s2 = calculate_monthly_savings(username, month2, year2)
+
+    if s1 == 0.0 and s2 == 0.0:
+        return 0.0
+
+    if s1 == 0.0:
+        return None
+
+    s1_abs = s1 if s1 >= 0 else -s1
+
+    pct = ((s2 - s1) / s1_abs) * 100.0
+    return pct
+
+
+
+def average_expense_by_category(username, month, year):
+    """
+    Calcula el porcentaje de gasto por categoría para un usuario.
+    - Proceso:
+        1. Filtra egresos del usuario para el mes/año dados
+        2. Agrupa por categoría y acumula el total por categoría
+        3. Calcula porcentaje = (suma_categoria / total_gastos) * 100
+    
+    Devuelve el porcentaje que representa cada categoría del total de gastos.
+    """
+    category_totals = {}
+    total_expenses = 0.0
+        
+    for exp in expenses:
+        if exp.get("user") == username:
+            parsed = convert_to_tuple(exp.get("date"))
+            if parsed:
+                if (parsed[1] == month and parsed[2] == year):
+                    cat = exp.get("category", "otros")
+                    amount = exp.get("amount")
+                    
+                    if cat in category_totals:
+                        category_totals[cat] = category_totals[cat] + amount
+                    else:
+                        category_totals[cat] = amount
+                    total_expenses += amount
+    
+    percentages = {}
+    if total_expenses > 0:
+        for category in category_totals:
+            percentages[category] = (category_totals[category] / total_expenses) * 100.0
+
+    return percentages 
+
+
 ### Menus
 def incomes_menu(current_username):
     options = [
@@ -454,6 +665,213 @@ def expenses_menu(current_username):
         elif selected == 5:
             print("Volviendo al menú principal...")
 
+
+
+def metrics_menu(current_username):
+    options = [
+        "Calcular ahorro mensual",
+        "Comparar ahorro entre dos meses",
+        "Porcentaje de gasto por categoría",         
+        "Volver"
+    ]
+
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Métricas", options)
+
+        # Calcular ahorro mensual
+        if selected == 1:
+            print("\n--- Calcular Ahorro Mensual ---")
+            month = 0
+            while not (1 <= month <= 12):
+                month_str = input("Ingrese el mes (1-12): ")
+                if month_str.isdigit():
+                    month = int(month_str)
+                if not (1 <= month <= 12):
+                    print("Error: debe ingresar un mes válido (1-12).")
+            
+            year = 0
+            while not (year > 1900):
+                year_str = input("Ingrese el año (ej: 2024): ")
+                if year_str.isdigit():
+                    year = int(year_str)
+                if not (year > 1900):
+                    print("Error: debe ingresar un año válido (mayor a 1900).")
+
+            savings = calculate_monthly_savings(current_username, month, year)
+            savings_formatted = int(savings * 100) / 100.0
+            print(f"\nEl ahorro para el mes {month} en el año {year} fue de: ${savings_formatted}")
+
+        # Comparar ahorro
+        elif selected == 2:    
+            print("\n--- Comparar Ahorro Entre Dos Meses ---")
+            print("-- Primer Período --")
+            month1 = 0
+            while not (1 <= month1 <= 12):
+                month1_str = input("Ingrese el mes (1-12): ")
+                if month1_str.isdigit():
+                    month1 = int(month1_str)
+                if not (1 <= month1 <= 12):
+                    print("Error: debe ingresar un mes válido (1-12).")
+            year1 = 0
+            while not (year1 > 1900):
+                year1_str = input("Ingrese el año (ej: 2023): ")
+                if year1_str.isdigit():
+                    year1 = int(year1_str)
+                if not (year1 > 1900):
+                    print("Error: debe ingresar un año válido (mayor a 1900).")
+
+            print("\n--- Segundo Período ---")
+            month2 = 0
+            while not (1 <= month2 <= 12):
+                month2_str = input("Ingrese el mes (1-12): ")
+                if month2_str.isdigit():
+                    month2 = int(month2_str)
+                if not (1 <= month2 <= 12):
+                    print("Error: debe ingresar un mes válido (1-12).")
+            year2 = 0
+            while not (year2 > 1900):
+                year2_str = input("Ingrese el año (ej: 2024): ")
+                if year2_str.isdigit():
+                    year2 = int(year2_str)
+                if not (year2 > 1900):
+                    print("Error: debe ingresar un año válido (mayor a 1900).")
+            
+            change = percent_change_in_savings(current_username, month1, year1, month2, year2)
+
+            if change is None:
+                print("\nNo se puede calcular el cambio porcentual (el ahorro del primer período fue cero).")
+            else:
+                change_formatted = int(change * 100) / 100.0
+                if change > 0:
+                    print(f"\nHubo un aumento del {change_formatted}% en el ahorro.")
+                elif change < 0:
+                    decrease_formatted = int((change * -1) * 100) / 100.0
+                    print(f"\nHubo una disminución del {decrease_formatted}% en el ahorro.")
+                else:
+                    print("\nNo hubo cambios en el ahorro entre los dos períodos.")
+
+        elif selected == 3:
+            print("\n--- Porcentaje de Gasto por Categoría ---")
+            month = 0
+            while not (1 <= month <= 12):
+                month_str = input("Ingrese el mes (1-12): ")
+                if month_str.isdigit():
+                    month = int(month_str)
+                if not (1 <= month <= 12):
+                    print("Error: debe ingresar un mes válido (1-12).")
+
+            year = 0
+            while not (year > 1900):
+                year_str = input("Ingrese el año (ej: 2024): ")
+                if year_str.isdigit():
+                    year = int(year_str)
+                if not (year > 1900):
+                    print("Error: debe ingresar un año válido (mayor a 1900).")
+
+            percentages = average_expense_by_category(current_username, month, year)
+    
+            if not percentages:
+                print(f"\nNo hay egresos para el mes {month}/{year}.")
+            else:
+                print(f"\nPorcentaje de gasto por categoría en la fecha: {month}/{year}:")
+                for categoria, porcentaje in percentages.items():
+                    print(f"- {categoria}: {porcentaje:.2f}%")
+    
+
+        elif selected == 4:
+            print("Volviendo al menú principal...")
+
+def goals_menu(current_username):
+    options = [
+        "Agregar objetivo de ahorro",
+        "Modificar objetivo de ahorro",
+        "Eliminar objetivo de ahorro",
+        "Listar todos mis objetivo de ahorros",
+        "Volver"
+    ]
+
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Objetivos de ahorro", options)
+
+        # Crear objetivo de ahorro
+        if selected == 1:
+            goal_id = str(random.randint(1000, 9999))
+            print(goal_id)
+            goal_category = choose_category(goal_categories)
+            goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
+            goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
+            goal_start_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) del inicio de su objetivo: ")
+            goal_end_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) de finalizacion de su objetivo: ")
+            goal_status = "Iniciado"
+
+            goal = {
+                "id": goal_id,
+                "category": goal_category,
+                "total_amount": goal_total_amount,
+                "saved_amount": goal_saved_amount,
+                "start_date": goal_start_date,
+                "end_date": goal_end_date,
+                "status": goal_status,
+                "user": current_username
+            }
+
+            respuesta = insertGoals(goal)
+
+            if respuesta == 0:
+                print("Objetivo de ahorro creado correctamente.")
+            elif respuesta == 1:
+                print("Error: el monto total debe ser mayor a 0.")
+            elif respuesta == 2:
+                print("Error: el monto guardado no puede superar el monto total del objetivo")
+            else:
+                print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+        # Modificar un objetivo de ahorro
+        elif selected == 2:
+            goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+            goal_category = choose_category(goal_categories)
+            goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
+            goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
+            goal_start_date = input_date("Nueve fecha incial (dd/mm/yyyy) de su objetivo: ")
+            goal_end_date = input_date("Nueve fecha final (dd/mm/yyyy) de su objetivo: ")
+            goal_status = "Iniciado"
+
+            goal = {
+                "id": goal_id,
+                "category": goal_category,
+                "total_amount": goal_total_amount,
+                "saved_amount": goal_saved_amount,
+                "start_date": goal_start_date,
+                "end_date": goal_end_date,
+                "status": goal_status,
+                "user": current_username
+            }
+
+            ok = updateGoals(goal)
+            print("Ingreso actualizado." if ok else "No se encontró el objetivo para actualizar.")
+        # Eliminar Objetivo de ahorro
+        elif selected == 3:
+            goal_id = input_non_empty("ID del egreso a eliminar: ")
+            ok = deleteGoals({"id": goal_id})
+            if ok:
+                print("Objetivo de ahorro eliminado.")
+            else:
+                print("No se encontró el objetivo de ahorro para eliminar.")
+        # Listar Objetivo de ahorro
+        elif selected == 4:
+            items = getGoalsByUser(current_username)
+            if not items:
+                print("No hay objetivos de ahorro para este usuario.")
+            else:
+                print("\nObjetivos de ahorro del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
+        # Volver al menú principal
+        elif selected == 5:
+            print("Volviendo al menú principal...")
+
 def main():
   
 #### INICIO DE PROGRAMA--------
@@ -514,7 +932,8 @@ def main():
     main_options = [
         "Ingresos",
         "Egresos",
-        "Métricas", 
+        "Métricas",
+        "Objetivos de ahorros",
         "Salir"
     ]
 
@@ -527,8 +946,10 @@ def main():
         elif selected == 2:
             expenses_menu(username)
         elif selected == 3:
-            print("Métricas: próximamente…")
+            metrics_menu(username)
         elif selected == 4:
+            goals_menu(username)
+        elif selected == 5:
             print("Saliendo...")
 
 #### INICIO DE PROGRAMA
