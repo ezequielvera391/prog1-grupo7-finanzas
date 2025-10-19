@@ -228,17 +228,6 @@ def getGoalsByUser(username):
 
     return found_goals
 # AUTH
-def login(username, password):
-    '''
-    Este método recibe un nombre de usuario y una contraseña, 
-    busca el usuario que coincida con ese nombre y luego verifica que la contraseña coincida
-    - Devuelve un booleano que indica si se pudo autenticar o no
-    '''
-    for user in users:
-        if user.get("name") == username and user.get("password") == password:
-            return True
-    return False
-
 
 def getUser(username):
     '''
@@ -297,7 +286,7 @@ def validar_existenciauser(users, name):
             return True
     return False
 
-def validar_userandpassword(users, name, password):
+def login(users, name, password):
     """
     Valida que el usuario exista y que la contraseña ingresada sea correcta.
     """
@@ -311,7 +300,6 @@ def validar_userandpassword(users, name, password):
                 return False
     print("Usuario no registrado.")
     return False
-
 
 ## Utils
 def get_menu_option(message, options):
@@ -919,12 +907,12 @@ def main():
     password = getpass.getpass("Ingrese contraseña: ")
 
     # usar validar_userandpassword en lugar de login  #(Ayuda no se porque me da error en islogged)
-    isLogged = validar_userandpassword(users, username, password) #llama a la funcion para validar usuario y contraseña
+    isLogged = login(users, username, password) #llama a la funcion para validar usuario y contraseña
     while not isLogged:
         print("Error en las credenciales")
         username = input("Ingrese nombre de usuario: ")
         password = getpass.getpass("Ingrese contraseña: ")
-        isLogged = validar_userandpassword(users, username, password)
+        isLogged = login(users, username, password)
 
     print("resultado: Auteticacion exitosa")
     
