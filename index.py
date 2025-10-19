@@ -49,6 +49,26 @@ users = [
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
 
 
+
+## Objetivos de ahorro
+# hay lista de objetivos de ahorro, y tienen las siguientes propiedades
+# - id: string (debe ser único)
+# - category: categorias (vamos a definir un listado fijo de categorias de objetivos de ahorro)
+# - total_amount: float (Monto total del objetivo de ahorro)
+# - saved_amount: float (Monto total que decide guardar el usuario)
+# - start_date: "dd/mm/yyyy" (fecha inicio)
+# - end_date: "dd/mm/yyyy" (fecha final)
+# - status: string (Puede tomar los valores de "Iniciado", "En proceso" y "Completado")
+# - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
+
+goals = [
+    # Datos de prueba para el usuario 'admin'
+    {"id": "1001", "category": "Viaje", "total_amount": 25000.0, "saved_amount": 23000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "status": "Iniciado", "user": "admin"},
+    {"id": "1002", "category": "Vivienda", "total_amount": 150000.0, "saved_amount": 40000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
+    {"id": "1003", "category": "Otros", "total_amount": 50000.0, "saved_amount": 10000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
+]
+goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
+
 # ABM INGRESOS
 def insertIncome(income):
     '''
@@ -132,18 +152,74 @@ def getExpensesByUser(username):
     devuelve una lista vacía.
     '''
     return expenses_by_user(username)
-# AUTH
-def login(username, password):
+
+# ABM OBJETIVOS DE AHORRO
+def insertGoals(goal):
     '''
-    Este método recibe un nombre de usuario y una contraseña, 
-    busca el usuario que coincida con ese nombre y luego verifica que la contraseña coincida
-    - Devuelve un booleano que indica si se pudo autenticar o no
+        Este método recibe un objetivo de ahorro, se asegura que sea un objetivo válido
+        y lo inserta en la lista de objetivos de ahorros.
+
+        Devuelve un número de error o 0 si se insertó correctamente.
+
+        0 = OK
+        1 = Monto objetivo (<= 0)
+        2 = Monto guardado (< 0)
+        3 = Fecha final anterior a fecha de inicio
     '''
-    for user in users:
-        if user.get("name") == username and user.get("password") == password:
+    
+    # Validar monto total del objetivo
+    if goal.get("total_amount") <= 0:
+        return 1
+
+    # Validar monto a guardar del objetivo
+    if goal.get("saved_amount") > goal.get("total_amount"):
+        return 2
+
+    # Validar fecha final del objetivo
+    goal_start_date = goal.get("start_date")
+    goal_end_date = goal.get("end_date")
+
+    fecha_inicio_goal = convert_to_tuple(goal_start_date)
+    fecha_fin_goal = convert_to_tuple(goal_end_date)
+
+    if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
+        return 3
+   
+    # Si todas las validaciones pasan insertar en lista
+    goals.append(goal)
+    return 0 
+
+def updateGoals(goal):
+    '''
+    Este método recibe un objetivo de ahorro, se asegura que sea un objetivo de ahorro válido y que exista en la lista de objetivos de ahorro reemplaza el objetivo de ahorro anterior con el nuevo
+    '''
+    for i in range(len(goals)):
+        if goals[i].get("id") == goal.get("id"):
+            goals[i] = goal
             return True
     return False
 
+def deleteGoals(goal):
+    '''
+    Este método recibe el id de un objetivo de ahorrro, se asegura que exista en la lista de objetivos de ahorro
+    elimina el objetivo de ahorrro correspondiente al id
+    '''
+    for i in range(len(goals)):
+        if goals[i].get("id") == goal.get("id"):
+            goals.pop(i)
+            return True
+    return False
+
+def getGoalsByUser(username):
+    '''
+    Este método recibe el nombre de un usuario y filtra la lista 
+    para devolver todos los objetivos de ahorro de ese usuario.
+    '''
+    found_goals = list(filter(lambda goal: goal.get("user") == username, goals))
+    print(found_goals)
+
+    return found_goals
+# AUTH
 
 def getUser(username):
     '''
@@ -154,6 +230,68 @@ def getUser(username):
         if user["name"] == username:
             return user
     return -1
+
+
+def registrar_usuario(users, name, password, password2, age, genre, role="user"):
+    
+    #Registra un nuevo usuario despues de validar que no exista y que las contraseñas coincidan.
+       #Verifica si el usuario ya existe en la lista.
+        # - Compara que ambas contraseñas coincidan.
+        #- Agrega el nuevo usuario a la lista "users".
+        #crear un nuevo diccionario con el nuevo usuario 
+
+    #Retorna:
+       # Lista de usuarios actualizada (con el nuevo usuario).
+    
+    # Validar si el usuario ya existe
+    if validar_existenciauser(users, name):
+        print("El usuario ya existe. Intente con otro nombre.")
+        return users,False
+    
+
+    # Validar que las contraseñas coincidan
+    if password != password2:
+        print("Las contraseñas no coinciden. Intente nuevamente.")
+        return users,False
+    
+
+    # Crear el nuevo usuario
+    new_user = {
+        "id": str(len(users) + 1),
+        "name": name,
+        "password": password,
+        "age": age,
+        "genre": genre,
+        "role": role
+    }
+
+    users.append(new_user)
+    print("Usuario registrado correctamente.")
+    return users, True
+
+def validar_existenciauser(users, name):
+    """
+    Valida si un usuario existe en la lista de usuarios.
+    """
+    for user in users:
+        if user["name"] == name:
+            return True
+    return False
+
+def login(users, name, password):
+    """
+    Valida que el usuario exista y que la contraseña ingresada sea correcta.
+    """
+    for user in users:
+        if user["name"] == name:
+            if user["password"] == password:
+                print("Acceso concedido.")
+                return True
+            else:
+                print("Contraseña incorrecta.")
+                return False
+    print("Usuario no registrado.")
+    return False
 
 ## Utils
 def get_menu_option(message, options):
@@ -225,6 +363,30 @@ def input_date(message):
 
     return date_str
 
+def input_int(mensaje):#funcion para validar que el input sea un entero
+    valor = input(mensaje).strip()# otra vez  uso strip para quitar espacios en blanco al inicio y final si el user lo escribe
+    valido = False# uso  bandera para controlar el bucle
+    while not valido:# mientras no sea valido sigo pidiendo el valor
+        try: # intento convertir el valor a entero con el nuevo concepto que vimos en clase
+            valor_int = int(valor)
+            valido = True
+        except ValueError:
+            print("Debe ingresar un numero entero valido. Intente nuevamente.")
+            valor = input(mensaje).strip()
+    return valor_int
+
+def input_password(mensaje="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
+    pwd = getpass.getpass(mensaje).strip()
+    
+    if not pwd:
+        print("La contraseña no puede estar vacia, intente nuevamente.")
+        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña 
+    elif len(pwd) < min_length:
+        print(f"La contraseña debe tener al menos {min_length} caracteres.")
+        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña
+    else:
+        return pwd  # contraseña valida
+    
 def choose_category(categories):
     """
     Muestra un menú para elegir una categoría de la lista y devuelve el string elegido.
@@ -597,22 +759,149 @@ def metrics_menu(current_username):
         elif selected == 4:
             print("Volviendo al menú principal...")
 
+def goals_menu(current_username):
+    options = [
+        "Agregar objetivo de ahorro",
+        "Modificar objetivo de ahorro",
+        "Eliminar objetivo de ahorro",
+        "Listar todos mis objetivo de ahorros",
+        "Volver"
+    ]
 
+    selected = 0
+    while selected != len(options):
+        selected = get_menu_option("Menú de Objetivos de ahorro", options)
+
+        # Crear objetivo de ahorro
+        if selected == 1:
+            goal_id = str(random.randint(1000, 9999))
+            print(goal_id)
+            goal_category = choose_category(goal_categories)
+            goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
+            goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
+            goal_start_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) del inicio de su objetivo: ")
+            goal_end_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) de finalizacion de su objetivo: ")
+            goal_status = "Iniciado"
+
+            goal = {
+                "id": goal_id,
+                "category": goal_category,
+                "total_amount": goal_total_amount,
+                "saved_amount": goal_saved_amount,
+                "start_date": goal_start_date,
+                "end_date": goal_end_date,
+                "status": goal_status,
+                "user": current_username
+            }
+
+            respuesta = insertGoals(goal)
+
+            if respuesta == 0:
+                print("Objetivo de ahorro creado correctamente.")
+            elif respuesta == 1:
+                print("Error: el monto total debe ser mayor a 0.")
+            elif respuesta == 2:
+                print("Error: el monto guardado no puede superar el monto total del objetivo")
+            else:
+                print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+        # Modificar un objetivo de ahorro
+        elif selected == 2:
+            goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+            goal_category = choose_category(goal_categories)
+            goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
+            goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
+            goal_start_date = input_date("Nueve fecha incial (dd/mm/yyyy) de su objetivo: ")
+            goal_end_date = input_date("Nueve fecha final (dd/mm/yyyy) de su objetivo: ")
+            goal_status = "Iniciado"
+
+            goal = {
+                "id": goal_id,
+                "category": goal_category,
+                "total_amount": goal_total_amount,
+                "saved_amount": goal_saved_amount,
+                "start_date": goal_start_date,
+                "end_date": goal_end_date,
+                "status": goal_status,
+                "user": current_username
+            }
+
+            ok = updateGoals(goal)
+            print("Ingreso actualizado." if ok else "No se encontró el objetivo para actualizar.")
+        # Eliminar Objetivo de ahorro
+        elif selected == 3:
+            goal_id = input_non_empty("ID del egreso a eliminar: ")
+            ok = deleteGoals({"id": goal_id})
+            if ok:
+                print("Objetivo de ahorro eliminado.")
+            else:
+                print("No se encontró el objetivo de ahorro para eliminar.")
+        # Listar Objetivo de ahorro
+        elif selected == 4:
+            items = getGoalsByUser(current_username)
+            if not items:
+                print("No hay objetivos de ahorro para este usuario.")
+            else:
+                print("\nObjetivos de ahorro del usuario actual:")
+                for i in range(len(items)):
+                    it = items[i]
+                    print(f"- [{it['id']}] {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
+        # Volver al menú principal
+        elif selected == 5:
+            print("Volviendo al menú principal...")
 
 def main():
-    '''
-    Función principal del programa
-    '''
+  
+#### INICIO DE PROGRAMA--------
+
+
+
+# --- FLUJO DE REGISTRO / LOGIN ---
+
     print("Bienvenido al sistema de finanzas.")
-    username = input("Ingrese nombre de usuario: ")
+
+    while True:#uso un while True para repetir el flujo hasta que el user se registre o loguee correctamente
+        # nvuelvo a preguntar si ya tiene cuenta
+        tiene_cuenta = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
+        
+        while tiene_cuenta == 2:
+            print("\n--- REGISTRO DE NUEVO USUARIO ---")
+            username = input_non_empty("Ingrese nombre de usuario: ")
+
+            # Contraseña y confirmacion
+            password = input_password()
+            password2 = input_password("Confirme contraseña: ")
+            while password != password2:
+                print("Las contraseñas no coinciden. Intente nuevamente.")
+                password = input_password()#la vuelov a pedir
+                password2 = input_password("Confirme contraseña: ")
+
+            # Edad y genero
+            age = input_int("Ingrese edad: ")
+            genre = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
+
+            # Intentar registrar usuario
+            users_new, exito = registrar_usuario(users, username, password, password2, age, genre)
+            if exito:
+                print(" Registro completado correctamente.")
+                break  # Salimos del while y continuamos al login
+            else:
+                print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
+                # El while vuelve al inicio del registro automaticamente
+
+        else:
+            break  # Ya tiene cuenta, pasar al login
+
+    # --- LOGIN ---
+    username = input_non_empty("Ingrese nombre de usuario: ")
     password = getpass.getpass("Ingrese contraseña: ")
 
-    isLogged = login(username, password)
+    # usar validar_userandpassword en lugar de login  #(Ayuda no se porque me da error en islogged)
+    isLogged = login(users, username, password) #llama a la funcion para validar usuario y contraseña
     while not isLogged:
         print("Error en las credenciales")
         username = input("Ingrese nombre de usuario: ")
         password = getpass.getpass("Ingrese contraseña: ")
-        isLogged = login(username, password)
+        isLogged = login(users, username, password)
 
     print("resultado: Auteticacion exitosa")
     
@@ -621,12 +910,13 @@ def main():
         "Ingresos",
         "Egresos",
         "Métricas",
+        "Objetivos de ahorros",
         "Salir"
     ]
 
     selected = 0
     while selected != len(main_options):
-        selected = get_menu_option("Menú principal", main_options)
+        selected = get_menu_option("Menu principal", main_options)
 
         if selected == 1:
             incomes_menu(username)
@@ -635,8 +925,9 @@ def main():
         elif selected == 3:
             metrics_menu(username)
         elif selected == 4:
+            goals_menu(username)
+        elif selected == 5:
             print("Saliendo...")
-
 
 #### INICIO DE PROGRAMA
 ensure_db_files()
