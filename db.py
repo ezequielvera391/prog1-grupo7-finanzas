@@ -146,6 +146,46 @@ def _validate_income(income):
 
     return (True, None)
 
+def _validate_user(user):
+    """
+    Recibe un user de tipo dict
+    Valida que tenga los campos básicos correctos:
+    - name es un string, no puede estar vacío
+    - password es un string, no puede estar vacío
+    - age es un número entero debe ser mayor a 0
+    - genre debe ser una M, una F o una X
+    - role debe ser admin o user
+    Devuelve (True, None) si es válido, o (False, "motivo") si no lo es.
+    """
+    if not isinstance(user, dict):
+        return (False, "formato inválido")
+    
+    if not user.get("name").strip():
+        return (False, "El campo name no puede estar vacío")
+    
+    if not user.get("password").strip():
+        return (False, "El campo password no puede estar vacío")
+    
+    valid_genres = ["M", "F", "X"]
+
+    if user.get("genre") not in valid_genres:
+        return (False, "El campo genero debe ser M, F o X")
+    
+    try:
+        age = int(user.get("age", 0))
+    except (TypeError, ValueError):
+        return (False, "Edad debe ser numérico")
+
+    if age <= 0:
+        return (False, "Edad debe ser mayor a 0")
+
+    valid_roles = ["admin", "user"]
+    if user.get("role") not in valid_roles:
+        return (False, "Rol inválido")
+
+    return (True, None)
+
+
 
 ## Publicas
 def read_collection_by_name(name):
@@ -168,24 +208,90 @@ def users_insert(user):
     Verifica que el usuario que se intenta ingresar no exista ya en base de datos
     De no existir lo ingresa, sino envía un error
     '''
+    _, userExist = users_find_by_name(user.get("name"))
+
+    if userExist:
+        return False
+    
+    ok, msg = _validate_user(user)
+
+    if not ok:
+        return False
+    
+    rows = _read_collection(USERS_FILE)
+    new_id = _next_id_from_collection(USERS_FILE)
+
+    user_final = {
+        "id": new_id,
+        "name": user.get("name"),
+        "password": user.get("password"),
+        "age": user.get("age"),
+        "genre": user.get("genre"),
+        "role": user.get("role")
+    }
+
+    rows.append(user_final)
+    _write_collection(USERS_FILE, rows)
+    return True
+
 
 def users_update(user):
     '''
     Recibe un usuario, busca que exista el nombre de usuario y el id
     En caso de existir lo actualiza, sino envía un error.
     '''
+    index, userExist = users_find_by_name(user.get("name"))
 
+    if not userExist:
+        return False
+    
+    ok, msg = _validate_user(user)
+
+    if not ok:
+        return False
+    
+    rows = _read_collection(USERS_FILE)
+    new_id = _next_id_from_collection(USERS_FILE)
+
+    rows[index] = {
+        "id": new_id,
+        "name": user.get("name"),
+        "password": user.get("password"),
+        "age": user.get("age"),
+        "genre": user.get("genre"),
+        "role": user.get("role")
+    }
+
+    _write_collection(USERS_FILE, rows)
+    
 def users_delete(user_id):
     '''
     Recibe el id de un usuario, busca que exista.
     En caso de existir lo elimina, sino envía un error.
     '''
+    rows = _read_collection(USERS_FILE)
+    updated_rows = [row for row in rows if str(row.get("id")) != str(user_id)]
 
-def users_find_by_name(name):
+    if len(updated_rows) == len(rows):
+        return (False, "El ingreso que intenta borrar no existe")
+
+    _write_collection(USERS_FILE, updated_rows)
+
+    return (True, "El usuario fue borrado satisfactoriamente")
+
+def users_find_by_name(username):
     '''
     Recibe el nombre de un usuario, busca que exista.
     En caso de existir lo devuelve completo, sino envía un error.
     '''
+    rows = _read_collection(USERS_FILE)
+    user = None
+    for index, row in enumerate(rows):
+        if row.get("name") == username:
+            user = row
+    if not user: return (None, False)
+
+    return (index, user)
 
 def login_check(username, password):
     '''
@@ -193,6 +299,11 @@ def login_check(username, password):
     verifica que el usuario exista y luego que la contraseña ingresada coincida con la que está guardada para ese usuario
     En caso de éxito devuelve True, sino devuelve False
     '''
+    _, user = users_find_by_name(username)
+    if not user: return False
+
+    return True if user.get("password") == password else False
+
 
 
 ### Incomes
