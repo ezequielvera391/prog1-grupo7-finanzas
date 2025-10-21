@@ -234,7 +234,6 @@ def users_insert(user):
     _write_collection(USERS_FILE, rows)
     return True
 
-
 def users_update(user):
     '''
     Recibe un usuario, busca que exista el nombre de usuario y el id
@@ -263,7 +262,7 @@ def users_update(user):
     }
 
     _write_collection(USERS_FILE, rows)
-    
+
 def users_delete(user_id):
     '''
     Recibe el id de un usuario, busca que exista.
@@ -558,7 +557,12 @@ __all__ = [
     "expenses_delete",
     "expenses_by_user",
 
-    # TODO: Users
+    # Users
+    "users_insert",
+    "users_update",
+    "users_delete",
+    "login_check",
+    "users_find_by_name",
 
     # Utils / Setup
     "ensure_db_files"

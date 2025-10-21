@@ -9,7 +9,12 @@ from db import (
     expenses_insert, 
     expenses_update, 
     expenses_delete, 
-    expenses_by_user, 
+    expenses_by_user,
+    users_insert,
+    users_update,
+    users_delete,
+    login_check,
+    users_find_by_name
 )
 import getpass
 import random
@@ -232,7 +237,7 @@ def getUser(username):
     return -1
 
 
-def registrar_usuario(users, name, password, password2, age, genre, role="user"):
+def register_user(name, password, password2, age, genre, role="user"):
     
     #Registra un nuevo usuario despues de validar que no exista y que las contraseñas coincidan.
        #Verifica si el usuario ya existe en la lista.
@@ -244,20 +249,20 @@ def registrar_usuario(users, name, password, password2, age, genre, role="user")
        # Lista de usuarios actualizada (con el nuevo usuario).
     
     # Validar si el usuario ya existe
-    if validar_existenciauser(users, name):
+    _, user_exist = users_find_by_name(name)
+    if user_exist:
         print("El usuario ya existe. Intente con otro nombre.")
-        return users,False
+        return False
     
 
     # Validar que las contraseñas coincidan
     if password != password2:
         print("Las contraseñas no coinciden. Intente nuevamente.")
-        return users,False
+        return False
     
 
     # Crear el nuevo usuario
     new_user = {
-        "id": str(len(users) + 1),
         "name": name,
         "password": password,
         "age": age,
@@ -265,33 +270,23 @@ def registrar_usuario(users, name, password, password2, age, genre, role="user")
         "role": role
     }
 
-    users.append(new_user)
-    print("Usuario registrado correctamente.")
-    return users, True
-
-def validar_existenciauser(users, name):
-    """
-    Valida si un usuario existe en la lista de usuarios.
-    """
-    for user in users:
-        if user["name"] == name:
-            return True
+    ok = users_insert(new_user)
+    if ok :
+        return True
+    
+    print("ERROR: no se pudo registrar el usuario.")
     return False
 
-def login(users, name, password):
+def login(name, password):
     """
     Valida que el usuario exista y que la contraseña ingresada sea correcta.
     """
-    for user in users:
-        if user["name"] == name:
-            if user["password"] == password:
-                print("Acceso concedido.")
-                return True
-            else:
-                print("Contraseña incorrecta.")
-                return False
-    print("Usuario no registrado.")
-    return False
+    login_success = login_check(name, password)
+    if login_success: 
+        print("Acceso concedido.")
+    else:
+        print("Error: credenciales incorrectas o usuario no existente")
+    return login_success
 
 ## Utils
 def get_menu_option(message, options):
@@ -858,54 +853,55 @@ def main():
 # --- FLUJO DE REGISTRO / LOGIN ---
 
     print("Bienvenido al sistema de finanzas.")
+    is_register = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
+    
+    while is_register == 2:
+        print("\n--- REGISTRO DE NUEVO USUARIO ---")
+        username = input_non_empty("Ingrese nombre de usuario: ")
 
-    while True:#uso un while True para repetir el flujo hasta que el user se registre o loguee correctamente
-        # nvuelvo a preguntar si ya tiene cuenta
-        tiene_cuenta = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
-        
-        while tiene_cuenta == 2:
-            print("\n--- REGISTRO DE NUEVO USUARIO ---")
-            username = input_non_empty("Ingrese nombre de usuario: ")
-
-            # Contraseña y confirmacion
-            password = input_password()
+        # Contraseña y confirmacion
+        password = input_password()
+        password2 = input_password("Confirme contraseña: ")
+        while password != password2:
+            print("Las contraseñas no coinciden. Intente nuevamente.")
+            password = input_password()#la vuelov a pedir
             password2 = input_password("Confirme contraseña: ")
-            while password != password2:
-                print("Las contraseñas no coinciden. Intente nuevamente.")
-                password = input_password()#la vuelov a pedir
-                password2 = input_password("Confirme contraseña: ")
 
-            # Edad y genero
-            age = input_int("Ingrese edad: ")
-            genre = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
-
-            # Intentar registrar usuario
-            users_new, exito = registrar_usuario(users, username, password, password2, age, genre)
-            if exito:
-                print(" Registro completado correctamente.")
-                break  # Salimos del while y continuamos al login
-            else:
-                print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
-                # El while vuelve al inicio del registro automaticamente
-
+        # Edad y genero
+        age = input_int("Ingrese edad: ")
+        # TODO: el genero debe ser mapeado a 1 M, 2 F, 3 x
+        genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
+        genre = ""
+        if genre_option == 1:
+            genre = "M"
+        elif genre_option == 2:
+            genre = "F"
         else:
-            break  # Ya tiene cuenta, pasar al login
+            genre = "X"
+        # Intentar registrar usuario
+        ok = register_user(username, password, password2, age, genre)
+        if ok:
+            print(" Registro completado correctamente.")
+            is_register = 1
+        else:
+            print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
+
 
     # --- LOGIN ---
+    print("Bienvenido al sistema de finanzas.\n")
     username = input_non_empty("Ingrese nombre de usuario: ")
     password = getpass.getpass("Ingrese contraseña: ")
 
-    # usar validar_userandpassword en lugar de login  #(Ayuda no se porque me da error en islogged)
-    isLogged = login(users, username, password) #llama a la funcion para validar usuario y contraseña
+    isLogged = login(username, password)
     while not isLogged:
-        print("Error en las credenciales")
         username = input("Ingrese nombre de usuario: ")
         password = getpass.getpass("Ingrese contraseña: ")
-        isLogged = login(users, username, password)
+        isLogged = login(username, password)
 
     print("resultado: Auteticacion exitosa")
     
     # Menú principal
+    # TODO: añadir opción de usuarios para modificar el usuario o borrar cuenta
     main_options = [
         "Ingresos",
         "Egresos",
