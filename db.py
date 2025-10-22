@@ -1,14 +1,19 @@
 import os
 import json
+import time
 
 # ----- Rutas y constantes -----
 DB_DIR = "./data"
 USERS_FILE = os.path.join(DB_DIR, "users.json")
 INCOMES_FILE = os.path.join(DB_DIR, "incomes.json")
 EXPENSES_FILE = os.path.join(DB_DIR, "expenses.json")
+GOALS_FILE = os.path.join(DB_DIR, "goals.json")
 
 income_categories = ["Salario", "Regalo", "Otros"]
 expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
+goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
+goals_status = ["Iniciado", "En proceso", "Completado"]
+
 
 ### Generales
 ## Privadas
@@ -20,6 +25,8 @@ def _collection_path(name):
         return INCOMES_FILE
     if lower == "expenses":
         return EXPENSES_FILE
+    if lower == "goals":
+        return GOALS_FILE
     print(f"Error: colección desconocida '{name}'. Las opciones válidas son 'users', 'incomes', o 'expenses'.")
     return None
 
@@ -185,8 +192,61 @@ def _validate_user(user):
 
     return (True, None)
 
+def _validate_goal(goal):
+    '''
+    Recibe un goal de tipo dict
+    Valida que tenga los campos básicos correctos:
 
+    user: string no vacio
+    category: un string que debe estar dentro de la lista goal_categories
+    total_amount: de tipo float (Monto total del objetivo de ahorro)
+    saved_amount: de tipo float (Monto total que decide guardar el usuario)
+    start_date: "dd/mm/yyyy" (fecha inicio)
+    end_date: "dd/mm/yyyy" (fecha final, debe ser mayor a la fecha de inicio)
+    status: string debe estar en la lista goals_status
+    '''
+    # TODO: verificar validaciones de si total debe ser mayor a saved, y si fecha inicio y final tiene un plazo minimo
+    if not isinstance(goal, dict):
+        return (False, "formato inválido")
+    
+    try:
+        total_amount = float(goal.get("total_amount", 0))
+    except (TypeError, ValueError):
+        return (False, "total_amount debe ser numérico")
 
+    if total_amount <= 0:
+        return (False, "total_amount debe ser mayor a 0")
+    
+    try:
+        saved_amount = float(goal.get("total_amount", 0))
+    except (TypeError, ValueError):
+        return (False, "total_amount debe ser numérico")
+
+    if saved_amount <= 0:
+        return (False, "total_amount debe ser mayor a 0")
+    
+    if not _is_valid_date(goal.get("start_date")):
+        return (False, "Fecha de inicio inválida (usar dd/mm/yyyy)")
+    
+    if not _is_valid_date(goal.get("end_date")):
+        return (False, "Fecha de fin inválida (usar dd/mm/yyyy)")
+
+    # TODO: validar que start sea menor a end
+
+    if not goal.get("name").strip():
+        return (False, "El campo name no puede estar vacío")
+    
+    if goal.get("category") not in goal_categories:
+        return (False, "Categoría inválida")
+    
+    if goal.get("status") not in goals_status:
+        return (False, "Estado inválido")
+
+    users = _read_collection(USERS_FILE)
+    if not any(user.get("name") == goal.get("user") for user in users):
+        return (False, "El usuario que intenta realizar la operación no existe")
+    
+    return (True, None)
 ## Publicas
 def read_collection_by_name(name):
     """
@@ -503,7 +563,6 @@ def expenses_delete(expense_id):
 
     return (True, "El egreso fue borrado satisfactoriamente")
     
-
 def expenses_by_user(username):
     '''
     Recibe username de tipo str.
@@ -514,6 +573,125 @@ def expenses_by_user(username):
     results = [row for row in rows if row.get("user") == username]
     return results
 
+### Goals
+
+def goals_insert(goal):
+    '''
+    Recibe un goal y lo guarda en goals.json.
+    Chequeos básicos:
+    - valida que user no esté vacio
+    - category esté entre las categorias válidas
+    - total_amount y saved_amount sean de tipo float
+    - start_date y end_date sean fechas válidas
+    - status esté entre los estados válidos
+    - user existe en users.json
+    Se asigna id Auto-incremental (max(id)+1)
+    Devuelve (True, expense_final) o (False, "motivo").
+    '''
+    ok, msg = _validate_goal(goal)
+    if not ok:
+        return (False, msg)
+    
+    # Leer colección y calcular próximo id
+    rows = _read_collection(GOALS_FILE)
+    new_id = _next_id_from_collection(GOALS_FILE)
+
+    goal_final = {
+        "id": new_id,
+        "category": goal.get("category"),
+        "total_amount": goal.get("total_amount"),
+        "saved_amount": goal.get("saved_amount"),
+        "start_date": goal.get("start_date"),
+        "end_date": goal.get("end_date"),
+        "status": goal.get("status"),
+        "user": goal.get("user")
+    }
+
+    # Guardar en base de datos
+    rows.append(goal_final)
+    _write_collection(GOALS_FILE, rows)
+
+    return (True, goal_final)
+
+def goals_update(goal):
+    '''
+    Recibe goal de tipo dict.
+    Actualiza una meta existente (mismo id) en goals.json.
+    Valida las siguientes reglas:
+    - valida que user no esté vacio
+    - category esté entre las categorias válidas
+    - total_amount y saved_amount sean de tipo float
+    - start_date y end_date sean fechas válidas
+    - status esté entre los estados válidos
+    - user existe en users.json
+    Devuelve (True, None) si se actualizó correctamente,
+    o (False, "motivo") si no se pudo actualizar.
+    '''
+    # Validaciones propias de esta funcion
+    goal_id = goal.get("id")
+    if not goal_id:
+        return (False, "falta campo id")
+    
+    rows = _read_collection(GOALS_FILE)
+    if not rows:
+        return (False, "no hay registros en goals.json")
+
+    index = _find_row_index(GOALS_FILE, goal_id)
+    if index is None:
+        return (False, f"no existe egreso con id {goal_id}")
+
+    # Validar las reglas de negocio antes de reemplazar
+    valid, msg = _validate_goal(goal)
+    if not valid:
+        return (False, msg)
+
+    # Actualizar registro existente
+    rows[index] = {
+        "id": str(goal_id),
+        "category": goal.get("category"),
+        "total_amount": goal.get("total_amount"),
+        "saved_amount": goal.get("saved_amount"),
+        "start_date": goal.get("start_date"),
+        "end_date": goal.get("end_date"),
+        "status": goal.get("status"),
+        "user": goal.get("user")
+    }
+
+    # Guardar en disco
+    _write_collection(GOALS_FILE, rows)
+
+    return (True, None)
+
+def goals_delete(goal_id):
+    '''
+    Recibe goal_id de tipo str.
+    Borra una meta por id de goals.json.
+    Devuelve:
+    En caso de éxito: (True, "La meta fue borrada satisfactoriamente")
+    En caso de que no encuentre el expense: (False, "La meta que intenta borrar no existe").
+    '''
+    rows = _read_collection(GOALS_FILE)
+    updated_rows = [row for row in rows if str(row.get("id")) != str(goal_id)]
+
+    # Si la cantidad no cambió, no existía
+    if len(updated_rows) == len(rows):
+        return (False, "La meta que intenta borrar no existe")
+
+    # Guardar cambios
+    _write_collection(GOALS_FILE, updated_rows)
+
+    return (True, "La meta fue borrada satisfactoriamente")
+    
+def goals_by_user(username):
+    '''
+    Recibe username de tipo str.
+    Devuelve una lista con todos las metas (goals) donde el campo "user" coincide con username.
+    Si no hay coincidencias, devuelve una lista vacía.
+    '''
+    rows = _read_collection(GOALS_FILE)
+    results = [row for row in rows if row.get("user") == username]
+    return results
+
 ### Boostrap DDBB
 def ensure_db_files():
     '''
@@ -521,12 +699,13 @@ def ensure_db_files():
     - users.json
     - incomes.json
     - expenses.json
+    - goals.json
     Si falta alguno, lo inicializa con [].
     No imprime ni pide input. Es solo para inicializar la bbdd en caso de que no exista
     '''
     os.makedirs(DB_DIR, exist_ok=True)
 
-    for path in (USERS_FILE, INCOMES_FILE, EXPENSES_FILE):
+    for path in (USERS_FILE, INCOMES_FILE, EXPENSES_FILE, GOALS_FILE):
         if not os.path.exists(path):
             with open(path, "w", encoding="utf-8") as file:
                 json.dump([], file, ensure_ascii=False)
@@ -563,6 +742,12 @@ __all__ = [
     "users_delete",
     "login_check",
     "users_find_by_name",
+
+    # Goals
+    "goals_insert",
+    "goals_update",
+    "goals_delete",
+    "goals_by_user",
 
     # Utils / Setup
     "ensure_db_files"
