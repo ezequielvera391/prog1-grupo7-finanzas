@@ -14,7 +14,11 @@ from db import (
     users_update,
     users_delete,
     login_check,
-    users_find_by_name
+    users_find_by_name,
+    goals_insert,
+    goals_update,
+    goals_delete,
+    goals_by_user,
 )
 import getpass
 import random
@@ -33,17 +37,6 @@ import random
 # - genre: "M" | "F" | "X" - con propositos de métricas de la aplicación
 # - role: "admin" | "user" - para definir si accede o no a las métricas de sistema
 
-users = [
-    {
-        "id":"1", 
-        "name": "admin", 
-        "password": "1234", 
-        "age": 20, 
-        "genre": "M", 
-        "role": "admin" 
-    },
-]
-
 ## Ingresos y egresos, van a tener la misma interfaz
 # hay lista de ingresos y de egresos, y tienen las siguientes propiedades
 # - id: string (debe ser único)
@@ -52,8 +45,6 @@ users = [
 # - date: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
-
-
 
 ## Objetivos de ahorro
 # hay lista de objetivos de ahorro, y tienen las siguientes propiedades
@@ -225,17 +216,6 @@ def getGoalsByUser(username):
 
     return found_goals
 # AUTH
-
-def getUser(username):
-    '''
-    Este método recibe un nombre de usuario y busca en la lista de usuarios si existe este usuario
-    devuelve -1 en caso de no encontrarlo
-    '''
-    for user in users:
-        if user["name"] == username:
-            return user
-    return -1
-
 
 def register_user(name, password, password2, age, genre, role="user"):
     
