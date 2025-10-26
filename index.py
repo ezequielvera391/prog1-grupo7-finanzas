@@ -1,7 +1,30 @@
+from db import (
+    ensure_db_files,
+    income_categories, 
+    expense_categories,
+    incomes_insert, 
+    incomes_update, 
+    incomes_delete, 
+    incomes_by_user, 
+    expenses_insert, 
+    expenses_update, 
+    expenses_delete, 
+    expenses_by_user,
+    users_insert,
+    login_check,
+    users_find_by_name,
+    goals_insert,
+    goals_update,
+    goals_delete,
+    goals_by_user,
+)
 import getpass
 import random
 
 ## DATOS DEL SISTEMA
+
+## BASE DE DATOS
+## Defino acá el path para los distintos archivos que van a representar las colecciones de mi base de datos
 
 ## Para el primer MVP vamos a tener un único usuario harcodeado, solo vamos a implementar el login
 # Lista de usuarios, los usarios tienen las siguientes propiedades:
@@ -12,17 +35,6 @@ import random
 # - genre: "M" | "F" | "X" - con propositos de métricas de la aplicación
 # - role: "admin" | "user" - para definir si accede o no a las métricas de sistema
 
-users = [
-    {
-        "id":"1", 
-        "name": "admin", 
-        "password": "1234", 
-        "age": 20, 
-        "genre": "M", 
-        "role": "admin" 
-    },
-]
-
 ## Ingresos y egresos, van a tener la misma interfaz
 # hay lista de ingresos y de egresos, y tienen las siguientes propiedades
 # - id: string (debe ser único)
@@ -31,26 +43,6 @@ users = [
 # - date: "dd/mm/yyyy" (pueden ingresarse fechas que no sean la actual)
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 # Ejemplo de valor correcto para un ingreso o egreso: entidad = { "id": "1", "amount": 1800.0, "category": "Other", "date": "08/06/2025", "user": "admin" }
-
-
-incomes = [
-    # Datos de prueba para el usuario 'admin'
-    {"id": "1001", "amount": 50000.0, "category": "Salario", "date": "05/06/2024", "user": "admin"},
-    {"id": "1002", "amount": 5000.0, "category": "Regalo", "date": "15/06/2024", "user": "admin"},
-    {"id": "1003", "amount": 52000.0, "category": "Salario", "date": "05/07/2024", "user": "admin"},
-]
-income_categories = ["Salario", "Regalo", "Otros"]
-
-expenses = [
-    # Datos de prueba para el usuario 'admin'
-    {"id": "2001", "amount": 10000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
-    {"id": "2001", "amount": 15000.0, "category": "Supermercado", "date": "15/06/2024", "user": "admin"},
-    {"id": "2003", "amount": 12000.0, "category": "Supermercado", "date": "10/06/2024", "user": "admin"},
-    {"id": "2003", "amount": 2000.0, "category": "Otros", "date": "10/06/2024", "user": "admin"},
-    {"id": "2002", "amount": 3000.0, "category": "Transporte", "date": "20/06/2024", "user": "admin"},
-    {"id": "2004", "amount": 105000.0, "category": "Vivienda", "date": "15/06/2024", "user": "admin"},
-]
-expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 
 ## Objetivos de ahorro
 # hay lista de objetivos de ahorro, y tienen las siguientes propiedades
@@ -63,125 +55,110 @@ expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
 # - status: string (Puede tomar los valores de "Iniciado", "En proceso" y "Completado")
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 
-goals = [
-    # Datos de prueba para el usuario 'admin'
-    {"id": "1001", "category": "Viaje", "total_amount": 25000.0, "saved_amount": 23000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "status": "Iniciado", "user": "admin"},
-    {"id": "1002", "category": "Vivienda", "total_amount": 150000.0, "saved_amount": 40000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
-    {"id": "1003", "category": "Otros", "total_amount": 50000.0, "saved_amount": 10000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
-]
 goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
 
 # ABM INGRESOS
 def insertIncome(income):
     '''
-    Este método recibe un ingreso, se asegura que sea un ingreso válido
-    y lo inserta en la lista de ingresos
+    Este método recibe un ingreso de tipo dict
+    y lo inserta en la lista de ingresos a través de un 
+    En caso de una funcion de db.py
+    Devuelve True en caso de éxito, False en caso de error
     '''
-    if income.get("amount") <= 0:
-        return False
-    
-    incomes.append(income)
-    return True
+    ok, _ = incomes_insert(income)
+    return ok
 
 
 def updateIncome(income):
     '''
-    Este método recibe un ingreso, se asegura que sea un ingreso válido y que exista en la lista de ingresos
-    reemplaza el ingreso anterior con el nuevo
+    Este método recibe un ingreso de tipo dict
+    Realiza el update a ravés de una funcion de db.py
+    Reemplaza el ingreso anterior con el nuevo
+    Devuelve True en caso de éxito, False en caso de error
     '''
-    for i in range(len(incomes)):
-        if incomes[i].get("id") == income.get("id"):
-            incomes[i] = income
-            return True
-    return False
+    ok, _ = incomes_update(income)
+    return ok
 
 def deleteIncome(income):
     '''
-    Este método recibe el id de un ingreso, se asegura que exista en la lista de ingresos
-    elimina el ingreso correspondiente al id
+    Este método recibe un income de tipo dict, 
+    Extrae el id y borra en base de datos el valor de income que coincida con ese id
+    Esto lo hace a través de una funcion de db.py
+    Devuelve True en caso de éxito, False en caso de error
     '''
-    for i in range(len(incomes)):
-        if incomes[i].get("id") == income.get("id"):
-            incomes.pop(i)
-            return True
-    return False
+    income_id = income.get("id")
+    ok, _ = incomes_delete(income_id)
+    return ok
     
 
 def getIncomesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y filtra la lista 
-    para devolver todos los ingresos de ese usuario.
+    Este método recibe el nombre de un usuario de tipo str
+    Usa una función de db.py que busca todos los incomes pertenecientes a ese usuario
+    Devuelve una lista de incomes, si el usuario no existe o no tiene incomes devuelve una lista vacia
     '''
-    found_incomes = list(filter(lambda income: income.get("user") == username, incomes))
-
-    return found_incomes
+    return incomes_by_user(username)
 
 
 # ABM EGRESOS
 def insertExpenses(expense):
     '''
-        Este método recibe un egreso, se asegura que sea un egreso válido
-        y lo inserta en la lista de egresos
+    Este método recibe un egreso de tipo dict
+    y lo inserta en la base de datos a través de una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    if expense.get("amount") <= 0:
-        return False
-    
-    expenses.append(expense)
-    return True
+    ok, _ = expenses_insert(expense)
+    return ok
     
 
 def updateExpenses(expense):
     '''
-    Este método recibe un egreso, se asegura que sea un egreso válido y que exista en la lista de egresos
-    reemplaza el egreso anterior con el nuevo
+    Este método recibe un egreso de tipo dict.
+    Realiza el update a través de una función de db.py,
+    reemplazando el egreso anterior con el nuevo (mismo id).
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(expenses)):
-        if expenses[i].get("id") == expense.get("id"):
-            expenses[i] = expense
-            return True
-    return False
+    ok, _ = expenses_update(expense)
+    return ok
 
 def deleteExpenses(expense):
     '''
-    Este método recibe el id de un egreso, se asegura que exista en la lista de egreso
-    elimina el egreso correspondiente al id
+    Este método recibe un egreso de tipo dict,
+    extrae el id y borra en base de datos el egreso que coincida con ese id,
+    utilizando una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(expenses)):
-        if expenses[i].get("id") == expense.get("id"):
-            expenses.pop(i)
-            return True
-    return False
+    expense_id = expense.get("id")
+    ok, _ = expenses_delete(expense_id)
+    return ok
 
 def getExpensesByUser(username):
     '''
-    Este método recibe el nombre de un usuario y filtra la lista 
-    para devolver todos los agresos de ese usuario.
+    Este método recibe el nombre de usuario de tipo str.
+    Usa una función de db.py que busca todos los egresos pertenecientes a ese usuario.
+    Devuelve una lista de egresos; si el usuario no existe o no tiene egresos,
+    devuelve una lista vacía.
     '''
-    found_expenses = list(filter(lambda expense: expense.get("user") == username, expenses))
-
-    return found_expenses
+    return expenses_by_user(username)
 
 # ABM OBJETIVOS DE AHORRO
 def insertGoals(goal):
     '''
-        Este método recibe un objetivo de ahorro, se asegura que sea un objetivo válido
-        y lo inserta en la lista de objetivos de ahorros.
-
-        Devuelve un número de error o 0 si se insertó correctamente.
-
-        0 = OK
-        1 = Monto objetivo (<= 0)
-        2 = Monto guardado (< 0)
-        3 = Fecha final anterior a fecha de inicio
+    Este método recibe un egreso de tipo dict
+    y lo inserta en la base de datos a través de una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    
+    # TODO: pasar validaciones a db.py
+
     # Validar monto total del objetivo
     if goal.get("total_amount") <= 0:
-        return 1
+        print("Error: el monto total debe ser mayor a 0.")
+        return False
 
     # Validar monto a guardar del objetivo
     if goal.get("saved_amount") > goal.get("total_amount"):
-        return 2
+        print("Error: el monto guardado no puede superar el monto total del objetivo")
+        return False
 
     # Validar fecha final del objetivo
     goal_start_date = goal.get("start_date")
@@ -191,81 +168,69 @@ def insertGoals(goal):
     fecha_fin_goal = convert_to_tuple(goal_end_date)
 
     if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
-        return 3
+        print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+        return False
    
-    # Si todas las validaciones pasan insertar en lista
-    goals.append(goal)
-    return 0 
+    # Si todas las validaciones pasan intenta insertar en lista
+    ok, _ = goals_insert(goal)
+    if not ok:
+        print("Error al guardar en base de datos.")
+        return False
+    
+    print("Objetivo de ahorro creado correctamente.")
+    return True
 
 def updateGoals(goal):
     '''
-    Este método recibe un objetivo de ahorro, se asegura que sea un objetivo de ahorro válido y que exista en la lista de objetivos de ahorro reemplaza el objetivo de ahorro anterior con el nuevo
+    Este método recibe un objetivo de ahorro de tipo dict.
+    Realiza el update a través de una función de db.py,
+    reemplazando el objetivo de ahorro anterior con el nuevo (mismo id).
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(goals)):
-        if goals[i].get("id") == goal.get("id"):
-            goals[i] = goal
-            return True
-    return False
+    ok, _ = goals_update(goal)
+    return ok
 
 def deleteGoals(goal):
     '''
-    Este método recibe el id de un objetivo de ahorrro, se asegura que exista en la lista de objetivos de ahorro
-    elimina el objetivo de ahorrro correspondiente al id
+    Este método recibe un objetivo de ahorro de tipo dict,
+    extrae el id y borra en base de datos el objetivo de ahorro que coincida con ese id,
+    utilizando una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(goals)):
-        if goals[i].get("id") == goal.get("id"):
-            goals.pop(i)
-            return True
-    return False
+    goal_id = goal.get("id")
+    ok, _ = goals_delete(goal_id)
+   
+    return ok
 
 def getGoalsByUser(username):
     '''
-    Este método recibe el nombre de un usuario y filtra la lista 
-    para devolver todos los objetivos de ahorro de ese usuario.
+    Este método recibe el nombre de un usuario de tipo str
+    Usa una función de db.py que busca todos los goals pertenecientes a ese usuario
+    Devuelve una lista de goals, si el usuario no existe o no tiene goals devuelve una lista vacia.
     '''
-    found_goals = list(filter(lambda goal: goal.get("user") == username, goals))
-    print(found_goals)
+    return goals_by_user(username)
 
-    return found_goals
 # AUTH
 
-def getUser(username):
+def register_user(name, password, password2, age, genre, role="user"):
     '''
-    Este método recibe un nombre de usuario y busca en la lista de usuarios si existe este usuario
-    devuelve -1 en caso de no encontrarlo
+    Recibe un name, password, password2, age, genre y role de tipo str
+    Valida que el usuario exista, que las contraseñas sean iguales
+    Usa un método de db.json para hacer el insert
+    Si todo sale bien, devuelve un True
+    Si alguna validación falla o falla el guardado en db devuelve False
     '''
-    for user in users:
-        if user["name"] == username:
-            return user
-    return -1
 
-
-def registrar_usuario(users, name, password, password2, age, genre, role="user"):
-    
-    #Registra un nuevo usuario despues de validar que no exista y que las contraseñas coincidan.
-       #Verifica si el usuario ya existe en la lista.
-        # - Compara que ambas contraseñas coincidan.
-        #- Agrega el nuevo usuario a la lista "users".
-        #crear un nuevo diccionario con el nuevo usuario 
-
-    #Retorna:
-       # Lista de usuarios actualizada (con el nuevo usuario).
-    
-    # Validar si el usuario ya existe
-    if validar_existenciauser(users, name):
+    _, user_exist = users_find_by_name(name)
+    if user_exist:
         print("El usuario ya existe. Intente con otro nombre.")
-        return users,False
+        return False
     
-
-    # Validar que las contraseñas coincidan
     if password != password2:
         print("Las contraseñas no coinciden. Intente nuevamente.")
-        return users,False
+        return False
     
-
-    # Crear el nuevo usuario
     new_user = {
-        "id": str(len(users) + 1),
         "name": name,
         "password": password,
         "age": age,
@@ -273,40 +238,34 @@ def registrar_usuario(users, name, password, password2, age, genre, role="user")
         "role": role
     }
 
-    users.append(new_user)
-    print("Usuario registrado correctamente.")
-    return users, True
-
-def validar_existenciauser(users, name):
-    """
-    Valida si un usuario existe en la lista de usuarios.
-    """
-    for user in users:
-        if user["name"] == name:
-            return True
+    ok = users_insert(new_user)
+    if ok :
+        return True
+    
+    print("ERROR: no se pudo registrar el usuario.")
     return False
 
-def login(users, name, password):
+def login(name, password):
     """
+    Redibe un name y password de tipo str
     Valida que el usuario exista y que la contraseña ingresada sea correcta.
+    Retorna True si el usuario existe y coincide la contraseña, retorna False si no coinciden o no existe
     """
-    for user in users:
-        if user["name"] == name:
-            if user["password"] == password:
-                print("Acceso concedido.")
-                return True
-            else:
-                print("Contraseña incorrecta.")
-                return False
-    print("Usuario no registrado.")
-    return False
+    login_success = login_check(name, password)
+    if login_success: 
+        print("Acceso concedido.")
+    else:
+        print("Error: credenciales incorrectas o usuario no existente")
+    return login_success
 
 ## Utils
 def get_menu_option(message, options):
     '''
+    Recibe un message de tipo Str y un options de tipo list
     Muestra un menú con las opciones dadas y devuelve el índice elegido.
     - message: título del menú
     - options: lista de strings con las opciones
+    Retorna un int con el valor del índice de la posición en la lista de opciones de la opcion elegida
     '''
     print(f"\n{message}")
     for i in range(len(options)):
@@ -324,7 +283,10 @@ def get_menu_option(message, options):
 
 def input_float(message):
     """
-    Pide un número decimal al usuario y valida hasta que se ingrese correctamente.
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que pueda convertirse a número decimal y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario, covnertido a float
     """
     value = None
     while value is None:
@@ -337,7 +299,10 @@ def input_float(message):
 
 def input_non_empty(message):
     """
-    Pide un string no vacío.
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado no sea una cadena vacia y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
     """
     value = ""
     while not value.strip():
@@ -348,7 +313,10 @@ def input_non_empty(message):
 
 def input_date(message):
     """
-    Pide una fecha en formato dd/mm/yyyy.
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado cumpla con el formato de fecha dd/mm/yyyy y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
     """
     date_str = ""
     is_valid = False
@@ -371,44 +339,60 @@ def input_date(message):
 
     return date_str
 
-def input_int(mensaje):#funcion para validar que el input sea un entero
-    valor = input(mensaje).strip()# otra vez  uso strip para quitar espacios en blanco al inicio y final si el user lo escribe
-    valido = False# uso  bandera para controlar el bucle
-    while not valido:# mientras no sea valido sigo pidiendo el valor
-        try: # intento convertir el valor a entero con el nuevo concepto que vimos en clase
-            valor_int = int(valor)
-            valido = True
+def input_int(mensaje):
+    """
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que pueda convertirse a número entero y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario, covnertido a int
+    """
+    value = input(mensaje).strip()
+    is_valid = False
+    while not is_valid:
+        try:
+            int_value = int(value)
+            is_valid = True
         except ValueError:
             print("Debe ingresar un numero entero valido. Intente nuevamente.")
-            valor = input(mensaje).strip()
-    return valor_int
+            value = input(mensaje).strip()
+    return int_value
 
-def input_password(mensaje="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
-    pwd = getpass.getpass(mensaje).strip()
+def input_password(message="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
+    """
+    Recibe un parametro opcional message de tipo str y un parametro opcional de tipo int min_length
+    Solicita a traves de getpass.getpass (un input que oculta el ingreso del usuario) el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado no sea una cadena vacia y que tenga el largo minimo definido, pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
+    """
+    pwd = getpass.getpass(message).strip()
     
     if not pwd:
         print("La contraseña no puede estar vacia, intente nuevamente.")
-        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña 
+        return input_password(message, min_length)
     elif len(pwd) < min_length:
         print(f"La contraseña debe tener al menos {min_length} caracteres.")
-        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña
+        return input_password(message, min_length)
     else:
-        return pwd  # contraseña valida
+        return pwd
     
 def choose_category(categories):
     """
-    Muestra un menú para elegir una categoría de la lista y devuelve el string elegido.
+    Recibe una lista de str, donde cada elemento representa una categoria
+    Utiliza la funcion get_menu_option para mostrar de forma visual un menu de selección y capturar la eleccion del usuario
+    retorna el elemento de tipo str seleccionado por el usuario
     """
     idx = get_menu_option("Elija una categoría", categories)
     return categories[idx - 1]
 
 
 
-##metricas
+## Metricas
 def convert_to_tuple(date_str):
     '''
-    Convierte un string "dd/mm/yyyy" en una tupla (day, month, year) de enteros.
-    - Si la fecha no tiene el formato correcto o valores fuera de rango, devuelve None.
+    Recibe un str date_str con el formato "dd/mm/yyyy"
+    Convierte date_str con formato "dd/mm/yyyy" en una tupla (day, month, year) de enteros.
+    Si la fecha no tiene el formato correcto o valores fuera de rango, devuelve None.
+    Sino retorna la tupla con formato (day, month, year)
     '''
     parts = date_str.split("/")
     if len(parts) != 3:
@@ -440,18 +424,16 @@ def calculate_monthly_savings(username, month, year):
     - Devuelve float (positivo/negativo/0.0).
     '''
     total_in = 0.0
-    for inc in incomes:
-        if inc.get("user") == username:
-            parsed = convert_to_tuple(inc.get("date"))
-            if parsed and (parsed[1], parsed[2]) == (month, year):
-                total_in = total_in + float(inc.get("amount", 0.0))
+    for inc in incomes_by_user(username):
+        parsed = convert_to_tuple(inc.get("date"))
+        if parsed and (parsed[1], parsed[2]) == (month, year):
+            total_in = total_in + float(inc.get("amount", 0.0))
 
     total_out = 0.0
-    for exp in expenses:
-        if exp.get("user") == username:
-            parsed = convert_to_tuple(exp.get("date"))
-            if parsed and (parsed[1], parsed[2]) == (month, year):
-                total_out = total_out + float(exp.get("amount", 0.0))
+    for exp in  expenses_by_user(username):
+        parsed = convert_to_tuple(exp.get("date"))
+        if parsed and (parsed[1], parsed[2]) == (month, year):
+            total_out = total_out + float(exp.get("amount", 0.0))
 
     return total_in - total_out
 
@@ -494,19 +476,17 @@ def average_expense_by_category(username, month, year):
     category_totals = {}
     total_expenses = 0.0
         
-    for exp in expenses:
-        if exp.get("user") == username:
-            parsed = convert_to_tuple(exp.get("date"))
-            if parsed:
-                if (parsed[1] == month and parsed[2] == year):
-                    cat = exp.get("category", "otros")
-                    amount = exp.get("amount")
-                    
-                    if cat in category_totals:
-                        category_totals[cat] = category_totals[cat] + amount
-                    else:
-                        category_totals[cat] = amount
-                    total_expenses += amount
+    for exp in expenses_by_user(username):
+        parsed = convert_to_tuple(exp.get("date"))
+        if parsed:
+            if (parsed[1] == month and parsed[2] == year):
+                cat = exp.get("category", "otros")
+                amount = exp.get("amount")
+                if cat in category_totals:
+                    category_totals[cat] = category_totals[cat] + amount
+                else:
+                    category_totals[cat] = amount
+                total_expenses += amount
     
     percentages = {}
     if total_expenses > 0:
@@ -654,6 +634,7 @@ def expenses_menu(current_username):
             print("Volviendo al menú principal...")
 
 
+## BASES DE DATOS ##
 
 def metrics_menu(current_username):
     options = [
@@ -785,8 +766,7 @@ def goals_menu(current_username):
 
         # Crear objetivo de ahorro
         if selected == 1:
-            goal_id = str(random.randint(1000, 9999))
-            print(goal_id)
+            goal_name = input_non_empty("Ingrese el nombre del objetivo: ")
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
@@ -795,7 +775,7 @@ def goals_menu(current_username):
             goal_status = "Iniciado"
 
             goal = {
-                "id": goal_id,
+                "name": goal_name,
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
@@ -805,19 +785,11 @@ def goals_menu(current_username):
                 "user": current_username
             }
 
-            respuesta = insertGoals(goal)
-
-            if respuesta == 0:
-                print("Objetivo de ahorro creado correctamente.")
-            elif respuesta == 1:
-                print("Error: el monto total debe ser mayor a 0.")
-            elif respuesta == 2:
-                print("Error: el monto guardado no puede superar el monto total del objetivo")
-            else:
-                print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+            ok = insertGoals(goal)
         # Modificar un objetivo de ahorro
         elif selected == 2:
             goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+            goal_name = input_non_empty("Ingrese el nombre del objetivo: ")
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
@@ -827,6 +799,7 @@ def goals_menu(current_username):
 
             goal = {
                 "id": goal_id,
+                "name": goal_name,
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
@@ -869,54 +842,55 @@ def main():
 # --- FLUJO DE REGISTRO / LOGIN ---
 
     print("Bienvenido al sistema de finanzas.")
+    is_register = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
+    
+    while is_register == 2:
+        print("\n--- REGISTRO DE NUEVO USUARIO ---")
+        username = input_non_empty("Ingrese nombre de usuario: ")
 
-    while True:#uso un while True para repetir el flujo hasta que el user se registre o loguee correctamente
-        # nvuelvo a preguntar si ya tiene cuenta
-        tiene_cuenta = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
-        
-        while tiene_cuenta == 2:
-            print("\n--- REGISTRO DE NUEVO USUARIO ---")
-            username = input_non_empty("Ingrese nombre de usuario: ")
-
-            # Contraseña y confirmacion
-            password = input_password()
+        # Contraseña y confirmacion
+        password = input_password()
+        password2 = input_password("Confirme contraseña: ")
+        while password != password2:
+            print("Las contraseñas no coinciden. Intente nuevamente.")
+            password = input_password()#la vuelov a pedir
             password2 = input_password("Confirme contraseña: ")
-            while password != password2:
-                print("Las contraseñas no coinciden. Intente nuevamente.")
-                password = input_password()#la vuelov a pedir
-                password2 = input_password("Confirme contraseña: ")
 
-            # Edad y genero
-            age = input_int("Ingrese edad: ")
-            genre = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
-
-            # Intentar registrar usuario
-            users_new, exito = registrar_usuario(users, username, password, password2, age, genre)
-            if exito:
-                print(" Registro completado correctamente.")
-                break  # Salimos del while y continuamos al login
-            else:
-                print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
-                # El while vuelve al inicio del registro automaticamente
-
+        # Edad y genero
+        age = input_int("Ingrese edad: ")
+        # TODO: el genero debe ser mapeado a 1 M, 2 F, 3 x
+        genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
+        genre = ""
+        if genre_option == 1:
+            genre = "M"
+        elif genre_option == 2:
+            genre = "F"
         else:
-            break  # Ya tiene cuenta, pasar al login
+            genre = "X"
+        # Intentar registrar usuario
+        ok = register_user(username, password, password2, age, genre)
+        if ok:
+            print(" Registro completado correctamente.")
+            is_register = 1
+        else:
+            print(" No se pudo completar el registro. Vamos a intentarlo de nuevo.\n")
+
 
     # --- LOGIN ---
+    print("Bienvenido al sistema de finanzas.\n")
     username = input_non_empty("Ingrese nombre de usuario: ")
     password = getpass.getpass("Ingrese contraseña: ")
 
-    # usar validar_userandpassword en lugar de login  #(Ayuda no se porque me da error en islogged)
-    isLogged = login(users, username, password) #llama a la funcion para validar usuario y contraseña
+    isLogged = login(username, password)
     while not isLogged:
-        print("Error en las credenciales")
         username = input("Ingrese nombre de usuario: ")
         password = getpass.getpass("Ingrese contraseña: ")
-        isLogged = login(users, username, password)
+        isLogged = login(username, password)
 
     print("resultado: Auteticacion exitosa")
     
     # Menú principal
+    # TODO: añadir opción de usuarios para modificar el usuario o borrar cuenta
     main_options = [
         "Ingresos",
         "Egresos",
@@ -941,4 +915,5 @@ def main():
             print("Saliendo...")
 
 #### INICIO DE PROGRAMA
-main() #aca tampoco se porque me da error ;(
+ensure_db_files()
+main()

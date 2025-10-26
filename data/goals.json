@@ -1,0 +1,12 @@
+[
+  {
+    "id": "1",
+    "category": "Viaje",
+    "total_amount": 1000.0,
+    "saved_amount": 555.0,
+    "start_date": "12/06/2025",
+    "end_date": "12/07/2026",
+    "status": "Iniciado",
+    "user": "admin"
+  }
+]
