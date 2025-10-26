@@ -1,6 +1,5 @@
 import os
 import json
-import time
 
 # ----- Rutas y constantes -----
 DB_DIR = "./data"
@@ -348,7 +347,8 @@ def users_find_by_name(username):
     for index, row in enumerate(rows):
         if row.get("name") == username:
             user = row
-    if not user: return (None, False)
+    if not user: 
+        return (None, False)
 
     return (index, user)
 
@@ -359,7 +359,8 @@ def login_check(username, password):
     En caso de éxito devuelve True, sino devuelve False
     '''
     _, user = users_find_by_name(username)
-    if not user: return False
+    if not user: 
+        return False
 
     return True if user.get("password") == password else False
 

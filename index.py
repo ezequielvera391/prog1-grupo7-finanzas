@@ -11,8 +11,6 @@ from db import (
     expenses_delete, 
     expenses_by_user,
     users_insert,
-    users_update,
-    users_delete,
     login_check,
     users_find_by_name,
     goals_insert,
@@ -57,12 +55,6 @@ import random
 # - status: string (Puede tomar los valores de "Iniciado", "En proceso" y "Completado")
 # - user: string (se debe guardar automaticamente con el valor del nombre o el id del usuario que realice la carga)
 
-goals = [
-    # Datos de prueba para el usuario 'admin'
-    {"id": "1001", "category": "Viaje", "total_amount": 25000.0, "saved_amount": 23000.0, "start_date": "10/06/2024", "end_date": "10/10/2024", "status": "Iniciado", "user": "admin"},
-    {"id": "1002", "category": "Vivienda", "total_amount": 150000.0, "saved_amount": 40000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
-    {"id": "1003", "category": "Otros", "total_amount": 50000.0, "saved_amount": 10000.0, "start_date": "10/06/2024", "end_date": "10/10/2024",  "status": "Iniciado", "user": "admin"},
-]
 goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
 
 # ABM INGRESOS
@@ -218,40 +210,26 @@ def getGoalsByUser(username):
     '''
     return goals_by_user(username)
 
-def getIncomesByUser(username):
-    '''
-    Este método recibe el nombre de un usuario de tipo str
-    Usa una función de db.py que busca todos los incomes pertenecientes a ese usuario
-    Devuelve una lista de incomes, si el usuario no existe o no tiene incomes devuelve una lista vacia
-    '''
-    return incomes_by_user(username)
 # AUTH
 
 def register_user(name, password, password2, age, genre, role="user"):
-    
-    #Registra un nuevo usuario despues de validar que no exista y que las contraseñas coincidan.
-       #Verifica si el usuario ya existe en la lista.
-        # - Compara que ambas contraseñas coincidan.
-        #- Agrega el nuevo usuario a la lista "users".
-        #crear un nuevo diccionario con el nuevo usuario 
+    '''
+    Recibe un name, password, password2, age, genre y role de tipo str
+    Valida que el usuario exista, que las contraseñas sean iguales
+    Usa un método de db.json para hacer el insert
+    Si todo sale bien, devuelve un True
+    Si alguna validación falla o falla el guardado en db devuelve False
+    '''
 
-    #Retorna:
-       # Lista de usuarios actualizada (con el nuevo usuario).
-    
-    # Validar si el usuario ya existe
     _, user_exist = users_find_by_name(name)
     if user_exist:
         print("El usuario ya existe. Intente con otro nombre.")
         return False
     
-
-    # Validar que las contraseñas coincidan
     if password != password2:
         print("Las contraseñas no coinciden. Intente nuevamente.")
         return False
     
-
-    # Crear el nuevo usuario
     new_user = {
         "name": name,
         "password": password,
@@ -269,7 +247,9 @@ def register_user(name, password, password2, age, genre, role="user"):
 
 def login(name, password):
     """
+    Redibe un name y password de tipo str
     Valida que el usuario exista y que la contraseña ingresada sea correcta.
+    Retorna True si el usuario existe y coincide la contraseña, retorna False si no coinciden o no existe
     """
     login_success = login_check(name, password)
     if login_success: 
@@ -281,9 +261,11 @@ def login(name, password):
 ## Utils
 def get_menu_option(message, options):
     '''
+    Recibe un message de tipo Str y un options de tipo list
     Muestra un menú con las opciones dadas y devuelve el índice elegido.
     - message: título del menú
     - options: lista de strings con las opciones
+    Retorna un int con el valor del índice de la posición en la lista de opciones de la opcion elegida
     '''
     print(f"\n{message}")
     for i in range(len(options)):
@@ -301,7 +283,10 @@ def get_menu_option(message, options):
 
 def input_float(message):
     """
-    Pide un número decimal al usuario y valida hasta que se ingrese correctamente.
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que pueda convertirse a número decimal y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario, covnertido a float
     """
     value = None
     while value is None:
@@ -314,7 +299,10 @@ def input_float(message):
 
 def input_non_empty(message):
     """
-    Pide un string no vacío.
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado no sea una cadena vacia y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
     """
     value = ""
     while not value.strip():
@@ -325,7 +313,10 @@ def input_non_empty(message):
 
 def input_date(message):
     """
-    Pide una fecha en formato dd/mm/yyyy.
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado cumpla con el formato de fecha dd/mm/yyyy y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
     """
     date_str = ""
     is_valid = False
@@ -348,33 +339,47 @@ def input_date(message):
 
     return date_str
 
-def input_int(mensaje):#funcion para validar que el input sea un entero
-    valor = input(mensaje).strip()# otra vez  uso strip para quitar espacios en blanco al inicio y final si el user lo escribe
-    valido = False# uso  bandera para controlar el bucle
-    while not valido:# mientras no sea valido sigo pidiendo el valor
-        try: # intento convertir el valor a entero con el nuevo concepto que vimos en clase
-            valor_int = int(valor)
-            valido = True
+def input_int(mensaje):
+    """
+    Recibe un messge de tipo str
+    Solicita a traves de input el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que pueda convertirse a número entero y pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario, covnertido a int
+    """
+    value = input(mensaje).strip()
+    is_valid = False
+    while not is_valid:
+        try:
+            int_value = int(value)
+            is_valid = True
         except ValueError:
             print("Debe ingresar un numero entero valido. Intente nuevamente.")
-            valor = input(mensaje).strip()
-    return valor_int
+            value = input(mensaje).strip()
+    return int_value
 
-def input_password(mensaje="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
-    pwd = getpass.getpass(mensaje).strip()
+def input_password(message="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
+    """
+    Recibe un parametro opcional message de tipo str y un parametro opcional de tipo int min_length
+    Solicita a traves de getpass.getpass (un input que oculta el ingreso del usuario) el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado no sea una cadena vacia y que tenga el largo minimo definido, pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
+    """
+    pwd = getpass.getpass(message).strip()
     
     if not pwd:
         print("La contraseña no puede estar vacia, intente nuevamente.")
-        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña 
+        return input_password(message, min_length)
     elif len(pwd) < min_length:
         print(f"La contraseña debe tener al menos {min_length} caracteres.")
-        return input_password(mensaje, min_length)  # vuelve a pedir la contraseña
+        return input_password(message, min_length)
     else:
-        return pwd  # contraseña valida
+        return pwd
     
 def choose_category(categories):
     """
-    Muestra un menú para elegir una categoría de la lista y devuelve el string elegido.
+    Recibe una lista de str, donde cada elemento representa una categoria
+    Utiliza la funcion get_menu_option para mostrar de forma visual un menu de selección y capturar la eleccion del usuario
+    retorna el elemento de tipo str seleccionado por el usuario
     """
     idx = get_menu_option("Elija una categoría", categories)
     return categories[idx - 1]
@@ -384,8 +389,10 @@ def choose_category(categories):
 ## Metricas
 def convert_to_tuple(date_str):
     '''
-    Convierte un string "dd/mm/yyyy" en una tupla (day, month, year) de enteros.
-    - Si la fecha no tiene el formato correcto o valores fuera de rango, devuelve None.
+    Recibe un str date_str con el formato "dd/mm/yyyy"
+    Convierte date_str con formato "dd/mm/yyyy" en una tupla (day, month, year) de enteros.
+    Si la fecha no tiene el formato correcto o valores fuera de rango, devuelve None.
+    Sino retorna la tupla con formato (day, month, year)
     '''
     parts = date_str.split("/")
     if len(parts) != 3:
