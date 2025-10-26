@@ -152,24 +152,21 @@ def getExpensesByUser(username):
 # ABM OBJETIVOS DE AHORRO
 def insertGoals(goal):
     '''
-        Este método recibe un objetivo de ahorro, se asegura que sea un objetivo válido
-        y lo inserta en la lista de objetivos de ahorros.
-
-        Devuelve un número de error o 0 si se insertó correctamente.
-
-        0 = OK
-        1 = Monto objetivo (<= 0)
-        2 = Monto guardado (< 0)
-        3 = Fecha final anterior a fecha de inicio
+    Este método recibe un egreso de tipo dict
+    y lo inserta en la base de datos a través de una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    
+    # TODO: pasar validaciones a db.py
+
     # Validar monto total del objetivo
     if goal.get("total_amount") <= 0:
-        return 1
+        print("Error: el monto total debe ser mayor a 0.")
+        return False
 
     # Validar monto a guardar del objetivo
     if goal.get("saved_amount") > goal.get("total_amount"):
-        return 2
+        print("Error: el monto guardado no puede superar el monto total del objetivo")
+        return False
 
     # Validar fecha final del objetivo
     goal_start_date = goal.get("start_date")
@@ -179,42 +176,55 @@ def insertGoals(goal):
     fecha_fin_goal = convert_to_tuple(goal_end_date)
 
     if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
-        return 3
+        print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+        return False
    
-    # Si todas las validaciones pasan insertar en lista
-    goals.append(goal)
-    return 0 
+    # Si todas las validaciones pasan intenta insertar en lista
+    ok, _ = goals_insert(goal)
+    if not ok:
+        print("Error al guardar en base de datos.")
+        return False
+    
+    print("Objetivo de ahorro creado correctamente.")
+    return True
 
 def updateGoals(goal):
     '''
-    Este método recibe un objetivo de ahorro, se asegura que sea un objetivo de ahorro válido y que exista en la lista de objetivos de ahorro reemplaza el objetivo de ahorro anterior con el nuevo
+    Este método recibe un objetivo de ahorro de tipo dict.
+    Realiza el update a través de una función de db.py,
+    reemplazando el objetivo de ahorro anterior con el nuevo (mismo id).
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(goals)):
-        if goals[i].get("id") == goal.get("id"):
-            goals[i] = goal
-            return True
-    return False
+    ok, _ = goals_update(goal)
+    return ok
 
 def deleteGoals(goal):
     '''
-    Este método recibe el id de un objetivo de ahorrro, se asegura que exista en la lista de objetivos de ahorro
-    elimina el objetivo de ahorrro correspondiente al id
+    Este método recibe un objetivo de ahorro de tipo dict,
+    extrae el id y borra en base de datos el objetivo de ahorro que coincida con ese id,
+    utilizando una función de db.py.
+    Devuelve True en caso de éxito, False en caso de error.
     '''
-    for i in range(len(goals)):
-        if goals[i].get("id") == goal.get("id"):
-            goals.pop(i)
-            return True
-    return False
+    goal_id = goal.get("id")
+    ok, _ = goals_delete(goal_id)
+   
+    return ok
 
 def getGoalsByUser(username):
     '''
-    Este método recibe el nombre de un usuario y filtra la lista 
-    para devolver todos los objetivos de ahorro de ese usuario.
+    Este método recibe el nombre de un usuario de tipo str
+    Usa una función de db.py que busca todos los goals pertenecientes a ese usuario
+    Devuelve una lista de goals, si el usuario no existe o no tiene goals devuelve una lista vacia.
     '''
-    found_goals = list(filter(lambda goal: goal.get("user") == username, goals))
-    print(found_goals)
+    return goals_by_user(username)
 
-    return found_goals
+def getIncomesByUser(username):
+    '''
+    Este método recibe el nombre de un usuario de tipo str
+    Usa una función de db.py que busca todos los incomes pertenecientes a ese usuario
+    Devuelve una lista de incomes, si el usuario no existe o no tiene incomes devuelve una lista vacia
+    '''
+    return incomes_by_user(username)
 # AUTH
 
 def register_user(name, password, password2, age, genre, role="user"):
@@ -749,8 +759,7 @@ def goals_menu(current_username):
 
         # Crear objetivo de ahorro
         if selected == 1:
-            goal_id = str(random.randint(1000, 9999))
-            print(goal_id)
+            goal_name = input_non_empty("Ingrese el nombre del objetivo: ")
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
@@ -759,7 +768,7 @@ def goals_menu(current_username):
             goal_status = "Iniciado"
 
             goal = {
-                "id": goal_id,
+                "name": goal_name,
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
@@ -769,19 +778,11 @@ def goals_menu(current_username):
                 "user": current_username
             }
 
-            respuesta = insertGoals(goal)
-
-            if respuesta == 0:
-                print("Objetivo de ahorro creado correctamente.")
-            elif respuesta == 1:
-                print("Error: el monto total debe ser mayor a 0.")
-            elif respuesta == 2:
-                print("Error: el monto guardado no puede superar el monto total del objetivo")
-            else:
-                print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
+            ok = insertGoals(goal)
         # Modificar un objetivo de ahorro
         elif selected == 2:
             goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+            goal_name = input_non_empty("Ingrese el nombre del objetivo: ")
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
@@ -791,6 +792,7 @@ def goals_menu(current_username):
 
             goal = {
                 "id": goal_id,
+                "name": goal_name,
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
