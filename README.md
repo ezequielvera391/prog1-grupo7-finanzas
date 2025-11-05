@@ -73,3 +73,4 @@ Mejoras e integración completa:
 - Reportes gráficos más claros y legibles.  
 - Mejora en la experiencia de usuario (menús más intuitivos, mensajes más descriptivos).  
 - Incluir más metricas
+- Añadir pruebas unitarias
