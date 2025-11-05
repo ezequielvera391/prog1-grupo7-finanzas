@@ -70,7 +70,8 @@ def _write_collection(file_path, rows):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(rows, f, ensure_ascii=False, indent=2)
 
-# TODO: esto podría ser una función pública de un módulo de útils para toda la app
+# TODO: De esta linea hasta la 249 va a un archivo "validations.py" (van a dejar de ser privadas, sacar _ de adelante del nombre de la funcion, ej: is_valid_date)
+
 def _is_valid_date(date_str):
     """
     Recibe un date_str de tipo str
@@ -246,6 +247,8 @@ def _validate_goal(goal):
         return (False, "El usuario que intenta realizar la operación no existe")
     
     return (True, None)
+
+
 ## Publicas
 def read_collection_by_name(name):
     """
