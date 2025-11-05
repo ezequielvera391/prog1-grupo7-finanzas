@@ -258,6 +258,8 @@ def login(name, password):
         print("Error: credenciales incorrectas o usuario no existente")
     return login_success
 
+## TODO: Migrar archivos de UTILS todas las funciones desde esta linea hasta la 441
+
 ## Utils
 def get_menu_option(message, options):
     '''
@@ -437,6 +439,9 @@ def convert_to_tuple(date_str):
         return None
     
     return (day, month, year)
+
+
+## TODO: migrar a archivo de logica de negocio (service.py) desde este linea hasta la 523 
 
 
 def calculate_monthly_savings(username, month, year):
@@ -656,8 +661,6 @@ def expenses_menu(current_username):
             print("Volviendo al menú principal...")
 
 
-## BASES DE DATOS ##
-
 def metrics_menu(current_username):
     options = [
         "Calcular ahorro mensual",
@@ -796,7 +799,7 @@ def goals_menu(current_username):
             print("Volviendo al menú principal...")
 
 def main():
-  
+
 #### INICIO DE PROGRAMA--------
 
 
@@ -804,6 +807,9 @@ def main():
 # --- FLUJO DE REGISTRO / LOGIN ---
 
     print("Bienvenido al sistema de finanzas.")
+
+    #TODO: toda la perte de usuarios hasta 858 (print("resultado: Auteticacion exitosa")) se crea funcion para modularizar el menu de auth crear funcion auth_menu o dividr registro y login.
+
     is_register = get_menu_option("¿Ya posee una cuenta? (si/no): ", ["si", "no"])
     
     while is_register == 2:
@@ -820,7 +826,6 @@ def main():
 
         # Edad y genero
         age = input_int("Ingrese edad: ")
-        # TODO: el genero debe ser mapeado a 1 M, 2 F, 3 x
         genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
         genre = ""
         if genre_option == 1:
@@ -852,7 +857,6 @@ def main():
     print("resultado: Auteticacion exitosa")
     
     # Menú principal
-    # TODO: añadir opción de usuarios para modificar el usuario o borrar cuenta
     main_options = [
         "Ingresos",
         "Egresos",
