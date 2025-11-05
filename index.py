@@ -385,6 +385,28 @@ def choose_category(categories):
     return categories[idx - 1]
 
 
+def input_period(message):
+    """
+    Recibe un string
+    Solicita al usuario un mes y un año, validando la entrada.
+    Retorna una tupla (month, year)
+    """
+    print(message)
+    month = 0
+    while not (1 <= month <= 12):
+        month_str = input("Ingrese el mes (1-12): ")
+        if month_str.isdigit():
+            month = int(month_str)
+        if not (1 <= month <= 12):
+            print("Error: debe ingresar un mes válido (1-12).")
+    
+    year = 0
+    while not (year > 1900):
+        year = input_int("Ingrese el año (ej: 2024): ")
+        if not (year > 1900):
+            print("Error: debe ingresar un año válido (mayor a 1900).")
+    return month, year
+
 
 ## Metricas
 def convert_to_tuple(date_str):
@@ -651,22 +673,7 @@ def metrics_menu(current_username):
         # Calcular ahorro mensual
         if selected == 1:
             print("\n--- Calcular Ahorro Mensual ---")
-            month = 0
-            while not (1 <= month <= 12):
-                month_str = input("Ingrese el mes (1-12): ")
-                if month_str.isdigit():
-                    month = int(month_str)
-                if not (1 <= month <= 12):
-                    print("Error: debe ingresar un mes válido (1-12).")
-            
-            year = 0
-            while not (year > 1900):
-                year_str = input("Ingrese el año (ej: 2024): ")
-                if year_str.isdigit():
-                    year = int(year_str)
-                if not (year > 1900):
-                    print("Error: debe ingresar un año válido (mayor a 1900).")
-
+            month, year = input_period("Ingrese el período a calcular:")
             savings = calculate_monthly_savings(current_username, month, year)
             savings_formatted = int(savings * 100) / 100.0
             print(f"\nEl ahorro para el mes {month} en el año {year} fue de: ${savings_formatted}")
@@ -674,38 +681,8 @@ def metrics_menu(current_username):
         # Comparar ahorro
         elif selected == 2:    
             print("\n--- Comparar Ahorro Entre Dos Meses ---")
-            print("-- Primer Período --")
-            month1 = 0
-            while not (1 <= month1 <= 12):
-                month1_str = input("Ingrese el mes (1-12): ")
-                if month1_str.isdigit():
-                    month1 = int(month1_str)
-                if not (1 <= month1 <= 12):
-                    print("Error: debe ingresar un mes válido (1-12).")
-            year1 = 0
-            while not (year1 > 1900):
-                year1_str = input("Ingrese el año (ej: 2023): ")
-                if year1_str.isdigit():
-                    year1 = int(year1_str)
-                if not (year1 > 1900):
-                    print("Error: debe ingresar un año válido (mayor a 1900).")
-
-            print("\n--- Segundo Período ---")
-            month2 = 0
-            while not (1 <= month2 <= 12):
-                month2_str = input("Ingrese el mes (1-12): ")
-                if month2_str.isdigit():
-                    month2 = int(month2_str)
-                if not (1 <= month2 <= 12):
-                    print("Error: debe ingresar un mes válido (1-12).")
-            year2 = 0
-            while not (year2 > 1900):
-                year2_str = input("Ingrese el año (ej: 2024): ")
-                if year2_str.isdigit():
-                    year2 = int(year2_str)
-                if not (year2 > 1900):
-                    print("Error: debe ingresar un año válido (mayor a 1900).")
-            
+            month1, year1 = input_period("-- Primer Período --")
+            month2, year2 = input_period("\n-- Segundo Período --")
             change = percent_change_in_savings(current_username, month1, year1, month2, year2)
 
             if change is None:
@@ -722,22 +699,7 @@ def metrics_menu(current_username):
 
         elif selected == 3:
             print("\n--- Porcentaje de Gasto por Categoría ---")
-            month = 0
-            while not (1 <= month <= 12):
-                month_str = input("Ingrese el mes (1-12): ")
-                if month_str.isdigit():
-                    month = int(month_str)
-                if not (1 <= month <= 12):
-                    print("Error: debe ingresar un mes válido (1-12).")
-
-            year = 0
-            while not (year > 1900):
-                year_str = input("Ingrese el año (ej: 2024): ")
-                if year_str.isdigit():
-                    year = int(year_str)
-                if not (year > 1900):
-                    print("Error: debe ingresar un año válido (mayor a 1900).")
-
+            month, year = input_period("Ingrese el período a analizar:")
             percentages = average_expense_by_category(current_username, month, year)
     
             if not percentages:
