@@ -72,7 +72,7 @@ def _write_collection(file_path, rows):
 
 # TODO: De esta linea hasta la 249 va a un archivo "validations.py" (van a dejar de ser privadas, sacar _ de adelante del nombre de la funcion, ej: is_valid_date)
 
-def _is_valid_date(date_str):
+def is_valid_date(date_str):
     """
     Recibe un date_str de tipo str
     Valida que la fecha tenga formato dd/mm/yyyy y valores superiores o iguales a 1/1/1900.
@@ -87,7 +87,7 @@ def _is_valid_date(date_str):
     except Exception:
         return False
     
-def _validate_expense(expense):
+def validate_expense(expense):
     """
     Recibe expense de tipo dict.
     Valida que tenga los campos básicos correctos:
@@ -111,7 +111,7 @@ def _validate_expense(expense):
     if expense.get("category") not in expense_categories:
         return (False, "Categoría inválida")
 
-    if not _is_valid_date(expense.get("date")):
+    if not is_valid_date(expense.get("date")):
         return (False, "Fecha inválida (usar dd/mm/yyyy)")
 
     users = _read_collection(USERS_FILE)
@@ -120,7 +120,7 @@ def _validate_expense(expense):
 
     return (True, None)
 
-def _validate_income(income):
+def validate_income(income):
     """
     Recibe income de tipo dict.
     Valida que tenga los campos básicos correctos:
@@ -144,7 +144,7 @@ def _validate_income(income):
     if income.get("category") not in income_categories:
         return (False, "Categoría inválida")
 
-    if not _is_valid_date(income.get("date")):
+    if not is_valid_date(income.get("date")):
         return (False, "Fecha inválida (usar dd/mm/yyyy)")
 
     users = _read_collection(USERS_FILE)
@@ -153,7 +153,7 @@ def _validate_income(income):
 
     return (True, None)
 
-def _validate_user(user):
+def validate_user(user):
     """
     Recibe un user de tipo dict
     Valida que tenga los campos básicos correctos:
@@ -192,7 +192,7 @@ def _validate_user(user):
 
     return (True, None)
 
-def _validate_goal(goal):
+def validate_goal(goal):
     '''
     Recibe un goal de tipo dict
     Valida que tenga los campos básicos correctos:
@@ -225,10 +225,10 @@ def _validate_goal(goal):
     if saved_amount <= 0:
         return (False, "total_amount debe ser mayor a 0")
     
-    if not _is_valid_date(goal.get("start_date")):
+    if not is_valid_date(goal.get("start_date")):
         return (False, "Fecha de inicio inválida (usar dd/mm/yyyy)")
     
-    if not _is_valid_date(goal.get("end_date")):
+    if not is_valid_date(goal.get("end_date")):
         return (False, "Fecha de fin inválida (usar dd/mm/yyyy)")
 
     # TODO: validar que start sea menor a end
@@ -275,7 +275,7 @@ def users_insert(user):
     if userExist:
         return False
     
-    ok, msg = _validate_user(user)
+    ok, msg = validate_user(user)
 
     if not ok:
         return False
@@ -306,7 +306,7 @@ def users_update(user):
     if not userExist:
         return False
     
-    ok, msg = _validate_user(user)
+    ok, msg = validate_user(user)
 
     if not ok:
         return False
@@ -383,7 +383,7 @@ def incomes_insert(income):
     Se asigna id Auto-incremental (max(id)+1).
     Devuelve (True, income_final) o (False, "motivo").
     '''
-    ok, msg = _validate_income(income)
+    ok, msg = validate_income(income)
     if not ok:
         return (False, msg)
 
@@ -424,7 +424,7 @@ def incomes_update(income):
     if index is None:
         return (False, f"no existe ingreso con id {income_id}")
 
-    valid, msg = _validate_income(income)
+    valid, msg = validate_income(income)
     if not valid:
         return (False, msg)
 
@@ -481,7 +481,7 @@ def expenses_insert(expense):
     '''
 
     # Validación
-    ok, msg = _validate_expense(expense)
+    ok, msg = validate_expense(expense)
     if not ok:
         return (False, msg)
     
@@ -529,7 +529,7 @@ def expenses_update(expense):
         return (False, f"no existe egreso con id {expense_id}")
 
     # Validar las reglas de negocio antes de reemplazar
-    valid, msg = _validate_expense(expense)
+    valid, msg = validate_expense(expense)
     if not valid:
         return (False, msg)
 
@@ -592,7 +592,7 @@ def goals_insert(goal):
     Se asigna id Auto-incremental (max(id)+1)
     Devuelve (True, expense_final) o (False, "motivo").
     '''
-    ok, msg = _validate_goal(goal)
+    ok, msg = validate_goal(goal)
     if not ok:
         return (False, msg)
     
@@ -645,7 +645,7 @@ def goals_update(goal):
         return (False, f"no existe egreso con id {goal_id}")
 
     # Validar las reglas de negocio antes de reemplazar
-    valid, msg = _validate_goal(goal)
+    valid, msg = validate_goal(goal)
     if not valid:
         return (False, msg)
 
