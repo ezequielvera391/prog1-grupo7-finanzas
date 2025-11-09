@@ -1,21 +1,12 @@
 #utils
+import getpass
 
 """utils.py tiene las funciones que manejan todo lo que el usuario
  escribe por teclado: pedir datos,
  validar fechas, números, textos o mostrar menus."""
 
-from index import(
-get_menu_option,
-input_float,
-input_non_empty,
-input_date,
-input_int,
-choose_category,
-input_period,
-convert_to_tuple
 
 
-)
 
 
 def get_menu_option(message, options):
@@ -181,6 +172,24 @@ def convert_to_tuple(date_str):
     
     return (day, month, year)
 
+def input_password(message="Ingrese contraseña: ", min_length=6):#funcion para validar la contraseña.recibe un mensaje y una longitud minima
+    """
+    Recibe un parametro opcional message de tipo str y un parametro opcional de tipo int min_length
+    Solicita a traves de getpass.getpass (un input que oculta el ingreso del usuario) el ingreso de un valor, usando como mensaje al usuario el message recibido
+    Valida que el valor ingresado no sea una cadena vacia y que tenga el largo minimo definido, pide reintentar hasta que se ingrese correctamente.
+    Retorna el valor ingresado por el usuario de tipo str
+    """
+    pwd = getpass.getpass(message).strip()
+   
+    if not pwd:
+        print("La contraseña no puede estar vacia, intente nuevamente.")
+        return input_password(message, min_length)
+    elif len(pwd) < min_length:
+        print(f"La contraseña debe tener al menos {min_length} caracteres.")
+        return input_password(message, min_length)
+    else:
+        return pwd
+
 
 #TODAS LAS FUNCIONES
 __all__ = [
@@ -191,5 +200,6 @@ __all__ = [
     "input_int",
     "choose_category",
     "input_period",
-    "convert_to_tuple"
+    "convert_to_tuple",
+    "input_password"
 ]

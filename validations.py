@@ -5,27 +5,13 @@ y correspondan a un usuario existente antes de guardarlos."""
 
 
 
-from db import (
-is_valid_date,
-validate_expense,
-validate_income,
-validate_user,
-validate_goal,
 
-)
-
+#rutas 
 USERS_FILE = "data/users.json"
-
-# funciones dentro de las funciones
-from db import(
-income_categories,
-expense_categories,
-_read_collection,
-goal_categories,
-goals_status
-
-)
-
+income_categories = ["Salario", "Regalo", "Otros"]
+expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
+goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
+goals_status = ["Iniciado", "En proceso", "Completado"]
 
 def is_valid_date(date_str):
     """
@@ -43,6 +29,10 @@ def is_valid_date(date_str):
         return False
     
 def validate_expense(expense):
+    from db import (
+    _read_collection
+
+)
     """
     Recibe expense de tipo dict.
     Valida que tenga los campos básicos correctos:
@@ -76,6 +66,10 @@ def validate_expense(expense):
     return (True, None)
 
 def validate_income(income):
+    from db import(
+     _read_collection
+
+)
     """
     Recibe income de tipo dict.
     Valida que tenga los campos básicos correctos:
@@ -148,6 +142,8 @@ def validate_user(user):
     return (True, None)
 
 def validate_goal(goal):
+    from db import (
+    _read_collection)
     '''
     Recibe un goal de tipo dict
     Valida que tenga los campos básicos correctos:
