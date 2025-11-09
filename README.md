@@ -11,8 +11,8 @@
 - [Requisitos No Funcionales](#requisitos-no-funcionales)
 - [Primer MVP (40%)](#primer-mvp-40)
 - [Segundo MVP (80%)](#segundo-mvp-80)
-- [Versión Final (100%)](#version-final-100)
-- [Ejecución](#ejecucion)
+- [Versión Final (100%)](#versión-final-100)
+- [Ejecución](#ejecución)
 
 ## Integrantes
 - Darkelys Pineda  
