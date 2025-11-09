@@ -38,7 +38,6 @@ from service import (
 
 )
 import getpass
-import random
 
 ## DATOS DEL SISTEMA
 
@@ -84,8 +83,8 @@ def insertIncome(income):
     En caso de una funcion de db.py
     Devuelve True en caso de éxito, False en caso de error
     '''
-    ok, _ = incomes_insert(income)
-    return ok
+    ok, message = incomes_insert(income)
+    return ok, message
 
 
 def updateIncome(income):
@@ -95,8 +94,8 @@ def updateIncome(income):
     Reemplaza el ingreso anterior con el nuevo
     Devuelve True en caso de éxito, False en caso de error
     '''
-    ok, _ = incomes_update(income)
-    return ok
+    ok, message = incomes_update(income)
+    return ok, message
 
 def deleteIncome(income):
     '''
@@ -106,8 +105,8 @@ def deleteIncome(income):
     Devuelve True en caso de éxito, False en caso de error
     '''
     income_id = income.get("id")
-    ok, _ = incomes_delete(income_id)
-    return ok
+    ok, message = incomes_delete(income_id)
+    return ok, message
     
 
 def getIncomesByUser(username):
@@ -126,8 +125,8 @@ def insertExpenses(expense):
     y lo inserta en la base de datos a través de una función de db.py.
     Devuelve True en caso de éxito, False en caso de error.
     '''
-    ok, _ = expenses_insert(expense)
-    return ok
+    ok, message = expenses_insert(expense)
+    return ok, message
     
 
 def updateExpenses(expense):
@@ -137,8 +136,8 @@ def updateExpenses(expense):
     reemplazando el egreso anterior con el nuevo (mismo id).
     Devuelve True en caso de éxito, False en caso de error.
     '''
-    ok, _ = expenses_update(expense)
-    return ok
+    ok, message = expenses_update(expense)
+    return ok, message
 
 def deleteExpenses(expense):
     '''
@@ -148,8 +147,8 @@ def deleteExpenses(expense):
     Devuelve True en caso de éxito, False en caso de error.
     '''
     expense_id = expense.get("id")
-    ok, _ = expenses_delete(expense_id)
-    return ok
+    ok, message = expenses_delete(expense_id)
+    return ok, message
 
 def getExpensesByUser(username):
     '''
@@ -206,8 +205,8 @@ def updateGoals(goal):
     reemplazando el objetivo de ahorro anterior con el nuevo (mismo id).
     Devuelve True en caso de éxito, False en caso de error.
     '''
-    ok, _ = goals_update(goal)
-    return ok
+    ok, message = goals_update(goal)
+    return ok, message
 
 def deleteGoals(goal):
     '''
@@ -217,9 +216,9 @@ def deleteGoals(goal):
     Devuelve True en caso de éxito, False en caso de error.
     '''
     goal_id = goal.get("id")
-    ok, _ = goals_delete(goal_id)
+    ok, message = goals_delete(goal_id)
    
-    return ok
+    return ok, message
 
 def getGoalsByUser(username):
     '''
@@ -294,19 +293,17 @@ def incomes_menu(current_username):
 
         # Crear
         if selected == 1:
-            income_id = str(random.randint(1000, 9999))
             amount = input_float("Ingrese el monto: ")
             category = choose_category(income_categories)
             date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
             income = {
-                "id": income_id,
                 "amount": amount,
                 "category": category,
                 "date": date,
                 "user": current_username
             }
-            ok = insertIncome(income)
-            print("Ingreso agregado." if ok else "No se pudo agregar el ingreso (amount debe ser mayor a 0).")
+            ok, message = insertIncome(income)
+            print("Ingreso agregado." if ok else message)
         # Actualizar
         elif selected == 2:
             income_id = input_non_empty("ID del ingreso a actualizar: ")
@@ -320,13 +317,13 @@ def incomes_menu(current_username):
                 "date": date,
                 "user": current_username
             }
-            ok = updateIncome(income)
-            print("Ingreso actualizado." if ok else "No se encontró el ingreso para actualizar.")
+            ok, message = updateIncome(income)
+            print("Ingreso actualizado." if ok else message)
         # Eliminar
         elif selected == 3:
             income_id = input_non_empty("ID del income a eliminar: ")
-            ok = deleteIncome({"id": income_id})
-            print("Ingreso eliminado." if ok else "No se encontró el ingreso para eliminar.")
+            ok, message = deleteIncome({"id": income_id})
+            print("Ingreso eliminado." if ok else message)
         # Listar
         elif selected == 4:
             items = getIncomesByUser(current_username)
@@ -356,22 +353,17 @@ def expenses_menu(current_username):
 
         # Crear
         if selected == 1:
-            expense_id = str(random.randint(1000, 9999))
             amount = input_float("Ingrese el monto: ")
             category = choose_category(expense_categories)
             date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
             expense = {
-                "id": expense_id,
                 "amount": amount,
                 "category": category,
                 "date": date,
                 "user": current_username
             }
-            ok = insertExpenses(expense)
-            if ok:
-                print("Egreso agregado.")
-            else:
-                print("No se pudo agregar el egreso (amount debe ser mayor a 0).")
+            ok, message = insertExpenses(expense)
+            print("Egreso agregado." if ok else message)
 
         # Actualizar
         elif selected == 2:
@@ -386,20 +378,14 @@ def expenses_menu(current_username):
                 "date": date,
                 "user": current_username
             }
-            ok = updateExpenses(expense)
-            if ok:
-                print("Egreso actualizado.")
-            else:
-                print("No se encontró el egreso para actualizar.")
+            ok, message = updateExpenses(expense)
+            print("Egreso actualizado." if ok else message)
 
         # Eliminar
         elif selected == 3:
             expense_id = input_non_empty("ID del egreso a eliminar: ")
-            ok = deleteExpenses({"id": expense_id})
-            if ok:
-                print("Egreso eliminado.")
-            else:
-                print("No se encontró el egreso para eliminar.")
+            ok, message = deleteExpenses({"id": expense_id})
+            print("Egreso eliminado." if ok else message)
 
         # Listar
         elif selected == 4:
@@ -529,16 +515,13 @@ def goals_menu(current_username):
                 "user": current_username
             }
 
-            ok = updateGoals(goal)
-            print("Ingreso actualizado." if ok else "No se encontró el objetivo para actualizar.")
+            ok, message = updateGoals(goal)
+            print("Ingreso actualizado." if ok else message)
         # Eliminar Objetivo de ahorro
         elif selected == 3:
             goal_id = input_non_empty("ID del egreso a eliminar: ")
-            ok = deleteGoals({"id": goal_id})
-            if ok:
-                print("Objetivo de ahorro eliminado.")
-            else:
-                print("No se encontró el objetivo de ahorro para eliminar.")
+            ok, message = deleteGoals({"id": goal_id})
+            print("Objetivo de ahorro eliminado." if ok else message)
         # Listar Objetivo de ahorro
         elif selected == 4:
             items = getGoalsByUser(current_username)

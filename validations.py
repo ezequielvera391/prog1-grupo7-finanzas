@@ -1,38 +1,31 @@
 """El archivo validations.py es el modulo encargado de verificar y validar la informacion
 Se asegura de que los datos sean correctos, tengan formato valido 
 y correspondan a un usuario existente antes de guardarlos."""
-
-
-
-
+from datetime import datetime
 
 #rutas 
-USERS_FILE = "data/users.json"
-income_categories = ["Salario", "Regalo", "Otros"]
-expense_categories = ["Supermercado", "Vivienda", "Transporte", "Otros"]
-goal_categories = ["Viaje", "Vivienda", "Electrodomesticos", "Educacion", "Otros"]
-goals_status = ["Iniciado", "En proceso", "Completado"]
 
 def is_valid_date(date_str):
     """
     Recibe un date_str de tipo str
-    Valida que la fecha tenga formato dd/mm/yyyy y valores superiores o iguales a 1/1/1900.
+    Valida que la fecha tenga formato dd/mm/yyyy, que exista (considerando años bisiestos)
+    y que el año esté entre 1900 y el año actual inclusive.
     Devuelve True si es válida, False en caso contrario.
     """
     try:
         d, m, y = date_str.split("/")
         d, m, y = int(d), int(m), int(y)
-        if 1 <= d <= 31 and 1 <= m <= 12 and y > 1900:
+
+        # si date time no puede generar la fecha (como 29 de febrero de un año ni bisiesto, sale por el except) 
+        datetime(y, m, d) 
+
+        if 1900 <= y <= datetime.now().year:
             return True
         return False
     except Exception:
         return False
     
-def validate_expense(expense):
-    from db import (
-    _read_collection
-
-)
+def validate_expense(expense, expense_categories, users):
     """
     Recibe expense de tipo dict.
     Valida que tenga los campos básicos correctos:
@@ -59,17 +52,12 @@ def validate_expense(expense):
     if not is_valid_date(expense.get("date")):
         return (False, "Fecha inválida (usar dd/mm/yyyy)")
 
-    users = _read_collection(USERS_FILE)
     if not any(user.get("name") == expense.get("user") for user in users):
         return (False, "El usuario que intenta realizar la operación no existe")
 
     return (True, None)
 
-def validate_income(income):
-    from db import(
-     _read_collection
-
-)
+def validate_income(income, income_categories, users):
     """
     Recibe income de tipo dict.
     Valida que tenga los campos básicos correctos:
@@ -96,7 +84,6 @@ def validate_income(income):
     if not is_valid_date(income.get("date")):
         return (False, "Fecha inválida (usar dd/mm/yyyy)")
 
-    users = _read_collection(USERS_FILE)
     if not any(user.get("name") == income.get("user") for user in users):
         return (False, "El usuario que intenta realizar la operación no existe")
 
@@ -141,9 +128,7 @@ def validate_user(user):
 
     return (True, None)
 
-def validate_goal(goal):
-    from db import (
-    _read_collection)
+def validate_goal(goal, goal_categories, goals_status, users):
     '''
     Recibe un goal de tipo dict
     Valida que tenga los campos básicos correctos:
@@ -193,7 +178,6 @@ def validate_goal(goal):
     if goal.get("status") not in goals_status:
         return (False, "Estado inválido")
 
-    users = _read_collection(USERS_FILE)
     if not any(user.get("name") == goal.get("user") for user in users):
         return (False, "El usuario que intenta realizar la operación no existe")
     
@@ -201,14 +185,9 @@ def validate_goal(goal):
 
 #TODAS LAS FUNCIONES 
 __all__=[
-
-"is_valid_date",
-"validate_expense",
-"validate_income",
-"validate_user",
-"validate_goal",
-
-
-
-
+    "is_valid_date",
+    "validate_expense",
+    "validate_income",
+    "validate_user",
+    "validate_goal",
 ]
