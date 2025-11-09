@@ -200,7 +200,7 @@ def validate_goal(goal):
     return (True, None)
 
 #TODAS LAS FUNCIONES 
-_all_=[
+__all__=[
 
 "is_valid_date",
 "validate_expense",

@@ -91,7 +91,7 @@ def average_expense_by_category(username, month, year):
     return percentages 
 
 #TODAS LAS FUNCIONES
-_all_=[
+__all__=[
     "calculate_monthly_savings",
     "percent_change_in_savings", 
     "average_expense_by_category"
