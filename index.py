@@ -38,7 +38,6 @@ from service import (
 
 )
 import getpass
-import random
 
 ## DATOS DEL SISTEMA
 
@@ -294,12 +293,10 @@ def incomes_menu(current_username):
 
         # Crear
         if selected == 1:
-            income_id = str(random.randint(1000, 9999))
             amount = input_float("Ingrese el monto: ")
             category = choose_category(income_categories)
             date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
             income = {
-                "id": income_id,
                 "amount": amount,
                 "category": category,
                 "date": date,
@@ -356,12 +353,10 @@ def expenses_menu(current_username):
 
         # Crear
         if selected == 1:
-            expense_id = str(random.randint(1000, 9999))
             amount = input_float("Ingrese el monto: ")
             category = choose_category(expense_categories)
             date = input_date("Ingrese la fecha en formato (dd/mm/yyyy): ")
             expense = {
-                "id": expense_id,
                 "amount": amount,
                 "category": category,
                 "date": date,
