@@ -1,6 +1,19 @@
 # prog1-grupo7-finanzas
 # Algoritmos y Estructura de Datos I
 
+## Índice
+- [Integrantes](#integrantes)
+- [Introducción](#introduccion)
+- [Alcance del Producto](#alcance-del-producto)
+    - [Beneficios](#beneficios)
+    - [Objetivos y Metas](#objetivos-y-metas)
+- [Requisitos Funcionales](#requisitos-funcionales)
+- [Requisitos No Funcionales](#requisitos-no-funcionales)
+- [Primer MVP (40%)](#primer-mvp-40)
+- [Segundo MVP (80%)](#segundo-mvp-80)
+- [Versión Final (100%)](#version-final-100)
+- [Ejecución](#ejecucion)
+
 ## Integrantes
 - Darkelys Pineda  
 - Ezequiel Vera  
@@ -74,3 +87,13 @@ Mejoras e integración completa:
 - Mejora en la experiencia de usuario (menús más intuitivos, mensajes más descriptivos).  
 - Incluir más metricas
 - Añadir pruebas unitarias
+
+--- 
+
+### Ejecución
+
+Para iniciar la aplicación, ubicarse en la carpeta raíz del proyecto y ejecutar:
+
+```bash
+python index.py
+```
