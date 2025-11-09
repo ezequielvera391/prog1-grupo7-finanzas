@@ -4,10 +4,10 @@ import json
 
 #utils
 from validations import(
-validate_expense,
-validate_income,
-validate_user,
-validate_goal
+    validate_expense,
+    validate_income,
+    validate_user,
+    validate_goal
 )
 
 
@@ -39,7 +39,7 @@ def _collection_path(name):
     print(f"Error: colección desconocida '{name}'. Las opciones válidas son 'users', 'incomes', o 'expenses'.")
     return None
 
-def _read_collection(file_path):
+def read_collection(file_path):
     try:
         if not os.path.exists(file_path):
             return []
@@ -51,7 +51,7 @@ def _read_collection(file_path):
 
 def _next_id_from_collection(file_path, id_field="id"):
     # TODO: podría guardar un json de contadores con el último valor de id de cáda colección para evitar recorrer las colecciones 
-    rows = _read_collection(file_path)
+    rows = read_collection(file_path)
     max_id = 0
     for row in rows:
         try:
@@ -70,7 +70,7 @@ def _find_row_index(file_path, id_value, id_field="id"):
     Devuelve el índice del primer registro cuyo id == id_value.
     Si no existe, devuelve None.
     """
-    rows = _read_collection(file_path)
+    rows = read_collection(file_path)
     for i, row in enumerate(rows):
         if str(row.get(id_field, "")) == str(id_value):
             return i
@@ -93,7 +93,7 @@ def read_collection_by_name(name):
     if path is None:
         print(f"Error: cannot read collection '{name}' because it is invalid.")
         return []
-    return _read_collection(path)
+    return read_collection(path)
 
 
 ### Usuarios 
@@ -112,7 +112,7 @@ def users_insert(user):
     if not ok:
         return False
     
-    rows = _read_collection(USERS_FILE)
+    rows = read_collection(USERS_FILE)
     new_id = _next_id_from_collection(USERS_FILE)
 
     user_final = {
@@ -143,7 +143,7 @@ def users_update(user):
     if not ok:
         return False
     
-    rows = _read_collection(USERS_FILE)
+    rows = read_collection(USERS_FILE)
     new_id = _next_id_from_collection(USERS_FILE)
 
     rows[index] = {
@@ -162,7 +162,7 @@ def users_delete(user_id):
     Recibe el id de un usuario, busca que exista.
     En caso de existir lo elimina, sino envía un error.
     '''
-    rows = _read_collection(USERS_FILE)
+    rows = read_collection(USERS_FILE)
     updated_rows = [row for row in rows if str(row.get("id")) != str(user_id)]
 
     if len(updated_rows) == len(rows):
@@ -177,7 +177,7 @@ def users_find_by_name(username):
     Recibe el nombre de un usuario, busca que exista.
     En caso de existir lo devuelve completo, sino envía un error.
     '''
-    rows = _read_collection(USERS_FILE)
+    rows = read_collection(USERS_FILE)
     user = None
     for index, row in enumerate(rows):
         if row.get("name") == username:
@@ -215,11 +215,12 @@ def incomes_insert(income):
     Se asigna id Auto-incremental (max(id)+1).
     Devuelve (True, income_final) o (False, "motivo").
     '''
-    ok, msg = validate_income(income)
+    users = read_collection(USERS_FILE)
+    ok, msg = validate_income(income, income_categories, users)
     if not ok:
         return (False, msg)
 
-    rows = _read_collection(INCOMES_FILE)
+    rows = read_collection(INCOMES_FILE)
     new_id = _next_id_from_collection(INCOMES_FILE)
 
     income_final = {
@@ -247,7 +248,7 @@ def incomes_update(income):
     if not income_id:
         return (False, "falta campo id")
 
-    rows = _read_collection(INCOMES_FILE)
+    rows = read_collection(INCOMES_FILE)
     if not rows:
         return (False, "no hay registros en incomes.json")
 
@@ -256,7 +257,8 @@ def incomes_update(income):
     if index is None:
         return (False, f"no existe ingreso con id {income_id}")
 
-    valid, msg = validate_income(income)
+    users = read_collection(USERS_FILE)
+    valid, msg = validate_income(income, income_categories, users)
     if not valid:
         return (False, msg)
 
@@ -279,7 +281,7 @@ def incomes_delete(income_id):
     (True, "El ingreso fue borrado satisfactoriamente")
     o (False, "El ingreso que intenta borrar no existe").
     '''
-    rows = _read_collection(INCOMES_FILE)
+    rows = read_collection(INCOMES_FILE)
     updated_rows = [row for row in rows if str(row.get("id")) != str(income_id)]
 
     if len(updated_rows) == len(rows):
@@ -295,7 +297,7 @@ def incomes_by_user(username):
     Devuelve una lista con todos los ingresos (incomes) donde el campo "user" coincide con username.
     Si no hay coincidencias, devuelve una lista vacía.
     '''
-    rows = _read_collection(INCOMES_FILE)
+    rows = read_collection(INCOMES_FILE)
     results = [row for row in rows if row.get("user") == username]
     return results
 
@@ -313,12 +315,13 @@ def expenses_insert(expense):
     '''
 
     # Validación
-    ok, msg = validate_expense(expense)
+    users = read_collection(USERS_FILE)
+    ok, msg = validate_expense(expense, expense_categories, users)
     if not ok:
         return (False, msg)
     
     # Leer colección y calcular próximo id
-    rows = _read_collection(EXPENSES_FILE)
+    rows = read_collection(EXPENSES_FILE)
     new_id = _next_id_from_collection(EXPENSES_FILE)
 
     expense_final = {
@@ -352,7 +355,7 @@ def expenses_update(expense):
     if not expense_id:
         return (False, "falta campo id")
     
-    rows = _read_collection(EXPENSES_FILE)
+    rows = read_collection(EXPENSES_FILE)
     if not rows:
         return (False, "no hay registros en expenses.json")
 
@@ -361,7 +364,8 @@ def expenses_update(expense):
         return (False, f"no existe egreso con id {expense_id}")
 
     # Validar las reglas de negocio antes de reemplazar
-    valid, msg = validate_expense(expense)
+    users = read_collection(USERS_FILE)
+    valid, msg = validate_expense(expense, expense_categories, users)
     if not valid:
         return (False, msg)
 
@@ -387,7 +391,7 @@ def expenses_delete(expense_id):
     En caso de éxito: (True, "El egreso fue borrado satisfactoriamente")
     En caso de que no encuentre el expense: (False, "El egreso que intenta borrar no existe").
     '''
-    rows = _read_collection(EXPENSES_FILE)
+    rows = read_collection(EXPENSES_FILE)
     updated_rows = [row for row in rows if str(row.get("id")) != str(expense_id)]
 
     # Si la cantidad no cambió, no existía
@@ -405,7 +409,7 @@ def expenses_by_user(username):
     Devuelve una lista con todos los egresos (expenses) donde el campo "user" coincide con username.
     Si no hay coincidencias, devuelve una lista vacía.
     '''
-    rows = _read_collection(EXPENSES_FILE)
+    rows = read_collection(EXPENSES_FILE)
     results = [row for row in rows if row.get("user") == username]
     return results
 
@@ -424,12 +428,13 @@ def goals_insert(goal):
     Se asigna id Auto-incremental (max(id)+1)
     Devuelve (True, expense_final) o (False, "motivo").
     '''
-    ok, msg = validate_goal(goal)
+    users = read_collection(USERS_FILE)
+    ok, msg = validate_goal(goal, goal_categories, goals_status, users)
     if not ok:
         return (False, msg)
     
     # Leer colección y calcular próximo id
-    rows = _read_collection(GOALS_FILE)
+    rows = read_collection(GOALS_FILE)
     new_id = _next_id_from_collection(GOALS_FILE)
 
     goal_final = {
@@ -468,7 +473,7 @@ def goals_update(goal):
     if not goal_id:
         return (False, "falta campo id")
     
-    rows = _read_collection(GOALS_FILE)
+    rows = read_collection(GOALS_FILE)
     if not rows:
         return (False, "no hay registros en goals.json")
 
@@ -477,7 +482,8 @@ def goals_update(goal):
         return (False, f"no existe egreso con id {goal_id}")
 
     # Validar las reglas de negocio antes de reemplazar
-    valid, msg = validate_goal(goal)
+    users = read_collection(USERS_FILE)
+    valid, msg = validate_goal(goal, goal_categories, goals_status, users)
     if not valid:
         return (False, msg)
 
@@ -506,7 +512,7 @@ def goals_delete(goal_id):
     En caso de éxito: (True, "La meta fue borrada satisfactoriamente")
     En caso de que no encuentre el expense: (False, "La meta que intenta borrar no existe").
     '''
-    rows = _read_collection(GOALS_FILE)
+    rows = read_collection(GOALS_FILE)
     updated_rows = [row for row in rows if str(row.get("id")) != str(goal_id)]
 
     # Si la cantidad no cambió, no existía
@@ -524,7 +530,7 @@ def goals_by_user(username):
     Devuelve una lista con todos las metas (goals) donde el campo "user" coincide con username.
     Si no hay coincidencias, devuelve una lista vacía.
     '''
-    rows = _read_collection(GOALS_FILE)
+    rows = read_collection(GOALS_FILE)
     results = [row for row in rows if row.get("user") == username]
     return results
 
@@ -559,6 +565,7 @@ __all__ = [
 
     # General
     "read_collection_by_name",
+    "read_collection",
 
     # Incomes
     "incomes_insert",

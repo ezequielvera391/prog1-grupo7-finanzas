@@ -1,12 +1,10 @@
 #utils
-import getpass
-
 """utils.py tiene las funciones que manejan todo lo que el usuario
  escribe por teclado: pedir datos,
  validar fechas, números, textos o mostrar menus."""
 
-
-
+from validations import is_valid_date
+import getpass
 
 
 def get_menu_option(message, options):
@@ -72,22 +70,14 @@ def input_date(message):
     """
     date_str = ""
     is_valid = False
+
     while not is_valid:
-        date_str = input(message)
-        parts = date_str.split("/")
-        if len(parts) == 3:
-            day_str, month_str, year_str = parts[0], parts[1], parts[2]
-
-            if day_str.isdigit() and month_str.isdigit() and year_str.isdigit():
-                day = int(day_str)
-                month = int(month_str)
-                year = int(year_str)
-
-                if 1 <= day <= 31 and 1 <= month <= 12 and year > 1900:
-                    is_valid = True
-
-        if not is_valid:
-            print("Error: la fecha debe tener formato dd/mm/yyyy válido.")
+        date_str = input(message).strip()
+        if is_valid_date(date_str):
+            is_valid = True
+        else:
+            print("Error: la fecha debe tener formato válido dd/mm/yyyy y corresponder a una fecha existente.")
+            
     return date_str
 
 
