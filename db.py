@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import json
 
@@ -423,7 +424,7 @@ def goals_insert(goal):
     - valida que user no esté vacio
     - category esté entre las categorias válidas
     - total_amount y saved_amount sean de tipo float
-    - start_date y end_date sean fechas válidas
+    - end_date sean fechas válidas
     - status esté entre los estados válidos
     - user existe en users.json
     Se asigna id Auto-incremental (max(id)+1)
@@ -438,13 +439,15 @@ def goals_insert(goal):
     rows = read_collection(GOALS_FILE)
     new_id = _next_id_from_collection(GOALS_FILE)
 
+    today_str = datetime.now().strftime("%d/%m/%Y")
+
     goal_final = {
         "id": new_id,
         "name": goal.get("name"),
         "category": goal.get("category"),
         "total_amount": goal.get("total_amount"),
         "saved_amount": goal.get("saved_amount"),
-        "start_date": goal.get("start_date"),
+        "start_date": today_str,
         "end_date": goal.get("end_date"),
         "status": goal.get("status"),
         "user": goal.get("user")
@@ -488,6 +491,8 @@ def goals_update(goal):
     valid, msg = validate_goal(goal, goal_categories, goals_status, users)
     if not valid:
         return (False, msg)
+    
+    original_start_date = rows[index].get("start_date")
 
     # Actualizar registro existente
     rows[index] = {
@@ -496,7 +501,7 @@ def goals_update(goal):
         "category": goal.get("category"),
         "total_amount": goal.get("total_amount"),
         "saved_amount": goal.get("saved_amount"),
-        "start_date": goal.get("start_date"),
+        "start_date": original_start_date,
         "end_date": goal.get("end_date"),
         "status": goal.get("status"),
         "user": goal.get("user")
