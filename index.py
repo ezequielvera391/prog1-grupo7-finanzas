@@ -27,10 +27,9 @@ from utils import(
     input_float,
     input_non_empty,
     input_date,
-    input_int,
+    input_validation_age,
     choose_category,
     input_period,
-    convert_to_tuple,
     input_password
 )
 #service
@@ -169,33 +168,9 @@ def insertGoals(goal):
     y lo inserta en la base de datos a través de una función de db.py.
     Devuelve True en caso de éxito, False en caso de error.
     '''
-    # TODO: pasar validaciones a db.py
-
-    # Validar monto total del objetivo
-    if goal.get("total_amount") <= 0:
-        print("Error: el monto total debe ser mayor a 0.")
-        return False
-
-    # Validar monto a guardar del objetivo
-    if goal.get("saved_amount") > goal.get("total_amount"):
-        print("Error: el monto guardado no puede superar el monto total del objetivo")
-        return False
-
-    # Validar fecha final del objetivo
-    goal_start_date = goal.get("start_date")
-    goal_end_date = goal.get("end_date")
-
-    fecha_inicio_goal = convert_to_tuple(goal_start_date)
-    fecha_fin_goal = convert_to_tuple(goal_end_date)
-
-    if fecha_fin_goal and fecha_inicio_goal and (fecha_fin_goal[2], fecha_fin_goal[1], fecha_fin_goal[0]) < (fecha_inicio_goal[2], fecha_inicio_goal[1], fecha_inicio_goal[0]):
-        print("Error: la fecha final no puede ser anterior a la fecha de inicio.")
-        return False
-   
-    # Si todas las validaciones pasan intenta insertar en lista
-    ok, _ = goals_insert(goal)
+    ok, msg = goals_insert(goal)
     if not ok:
-        print("Error al guardar en base de datos.")
+        print(f"Error al guardar el objetivo de ahorro: {msg}")
         return False
     
     print("Objetivo de ahorro creado correctamente.")
@@ -312,7 +287,7 @@ def incomes_menu(current_username):
             income_id = input_non_empty("ID del ingreso a actualizar: ")
             income_id_validated = incomes_id_is_valid(income_id)
 
-            while income_id_validated == False:
+            while not income_id_validated:
                 income_id = input_non_empty("ID del ingreso a actualizar: ")
                 income_id_validated = incomes_id_is_valid(income_id)
             
@@ -381,7 +356,7 @@ def expenses_menu(current_username):
             expense_id = input_non_empty("ID del egreso a actualizar: ")
             expense_id_validated = expenses_id_is_valid(expense_id)
 
-            while expense_id_validated == False:
+            while not expense_id_validated:
                 expense_id = input_non_empty("ID del egreso a actualizar: ")
                 expense_id_validated = expenses_id_is_valid(expense_id)
 
@@ -493,7 +468,6 @@ def goals_menu(current_username):
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
-            goal_start_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) del inicio de su objetivo: ")
             goal_end_date = input_date("Ingrese la fecha en formato (dd/mm/yyyy) de finalizacion de su objetivo: ")
             goal_status = "Iniciado"
 
@@ -502,7 +476,6 @@ def goals_menu(current_username):
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
-                "start_date": goal_start_date,
                 "end_date": goal_end_date,
                 "status": goal_status,
                 "user": current_username
@@ -514,7 +487,7 @@ def goals_menu(current_username):
             goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
             goal_id_validated = goals_id_is_valid(goal_id)
 
-            while goal_id_validated == False:
+            while not goal_id_validated:
                 goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
                 goal_id_validated = goals_id_is_valid(goal_id)
 
@@ -522,7 +495,6 @@ def goals_menu(current_username):
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
-            goal_start_date = input_date("Nueve fecha incial (dd/mm/yyyy) de su objetivo: ")
             goal_end_date = input_date("Nueve fecha final (dd/mm/yyyy) de su objetivo: ")
             goal_status = "Iniciado"
 
@@ -532,7 +504,6 @@ def goals_menu(current_username):
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
-                "start_date": goal_start_date,
                 "end_date": goal_end_date,
                 "status": goal_status,
                 "user": current_username
@@ -554,7 +525,7 @@ def goals_menu(current_username):
                 print("\nObjetivos de ahorro del usuario actual:")
                 for i in range(len(items)):
                     it = items[i]
-                    print(f"- [{it['id']}] {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
+                    print(f"- [{it['id']}] | {it['name']} | {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
         # Volver al menú principal
         elif selected == 5:
             print("Volviendo al menú principal...")
@@ -586,15 +557,16 @@ def main():
             password2 = input_password("Confirme contraseña: ")
 
         # Edad y genero
-        age = input_int("Ingrese edad: ")
-        genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
-        genre = ""
-        if genre_option == 1:
-            genre = "M"
-        elif genre_option == 2:
-            genre = "F"
-        else:
-            genre = "X"
+        age, validation_age = input_validation_age()
+        if validation_age:
+            genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
+            genre = ""
+            if genre_option == 1:
+                genre = "M"
+            elif genre_option == 2:
+                genre = "F"
+            else:
+                genre = "X"
         # Intentar registrar usuario
         ok = register_user(username, password, password2, age, genre)
         if ok:

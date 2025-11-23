@@ -1,30 +1,71 @@
 """El archivo validations.py es el modulo encargado de verificar y validar la informacion
 Se asegura de que los datos sean correctos, tengan formato valido 
 y correspondan a un usuario existente antes de guardarlos."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
 #rutas 
 
-def is_valid_date(date_str):
+
+def _parse_date(date_str):
     """
-    Recibe un date_str de tipo str
-    Valida que la fecha tenga formato dd/mm/yyyy, que exista (considerando años bisiestos)
-    y que el año esté entre 1900 y el año actual inclusive.
-    Devuelve True si es válida, False en caso contrario.
+    Recibe un String con formato dd/mm/yyyy e intenta convertirolo a objeto datetime.date.
+    Devuelve None si el formato es inválido o la fecha no existe.
     """
     try:
-        d, m, y = date_str.split("/")
-        d, m, y = int(d), int(m), int(y)
-
-        # si date time no puede generar la fecha (como 29 de febrero de un año ni bisiesto, sale por el except) 
-        datetime(y, m, d) 
-
-        if 1900 <= y <= datetime.now().year:
-            return True
-        return False
+        d, m, y = map(int, date_str.split("/"))
+        return datetime(y, m, d).date()
     except Exception:
+        return None
+
+def is_valid_date(date_str):
+    """
+    Recibe un date_str de tipo str.
+    Valida que la fecha tenga formato dd/mm/yyyy y que exista
+    (considerando años bisiestos).
+    Devuelve True si es válida, False en caso contrario.
+    """
+    fecha = _parse_date(date_str)
+    if not fecha:
         return False
     
+    if fecha.year < 1900:
+        return False
+
+    return True
+
+def is_past_or_today(date_str):
+    """
+    Recibe un String con formato dd/mm/yyyy 
+    Valida que la fecha sea válida y esté entre 01/01/1900 y hoy inclusive.
+    Útil para gastos, ingresos, etc.
+    """
+    fecha = _parse_date(date_str)
+    if not fecha:
+        return False
+
+    today = datetime.now().date()
+    return fecha <= today and fecha.year >= 1900
+
+def is_valid_goal_date(date_str, max_years=50):
+    """
+    Recibe un String con formato dd/mm/yyyy y un int max_years
+    Valida que la fecha sea válida, a futuro (>= hoy)
+    y no más allá de max_years años desde hoy.
+    Útil para fechas de finalización de objetivos de ahorro.
+    """
+    fecha = _parse_date(date_str)
+    if not fecha:
+        return False
+
+    today = datetime.now().date()
+
+    if fecha <= today:
+        return False
+
+    max_date = today + timedelta(days=365 * max_years)
+    return fecha <= max_date
+
+
 def validate_expense(expense, expense_categories, users):
     """
     Recibe expense de tipo dict.
@@ -81,8 +122,8 @@ def validate_income(income, income_categories, users):
     if income.get("category") not in income_categories:
         return (False, "Categoría inválida")
 
-    if not is_valid_date(income.get("date")):
-        return (False, "Fecha inválida (usar dd/mm/yyyy)")
+    if not is_past_or_today(income.get("date")):
+        return (False, "Fecha inválida (usar dd/mm/yyyy y no puede ser futura)")
 
     if not any(user.get("name") == income.get("user") for user in users):
         return (False, "El usuario que intenta realizar la operación no existe")
@@ -137,40 +178,37 @@ def validate_goal(goal, goal_categories, goals_status, users):
     category: un string que debe estar dentro de la lista goal_categories
     total_amount: de tipo float (Monto total del objetivo de ahorro)
     saved_amount: de tipo float (Monto total que decide guardar el usuario)
-    start_date: "dd/mm/yyyy" (fecha inicio)
     end_date: "dd/mm/yyyy" (fecha final, debe ser mayor a la fecha de inicio)
     status: string debe estar en la lista goals_status
     '''
-    # TODO: verificar validaciones de si total debe ser mayor a saved, y si fecha inicio y final tiene un plazo minimo
     if not isinstance(goal, dict):
         return (False, "formato inválido")
     
     try:
         total_amount = float(goal.get("total_amount", 0))
     except (TypeError, ValueError):
-        return (False, "total_amount debe ser numérico")
+        return (False, "Monto total debe ser numérico")
 
     if total_amount <= 0:
-        return (False, "total_amount debe ser mayor a 0")
+        return (False, "Monto total  debe ser mayor a 0")
     
     try:
-        saved_amount = float(goal.get("total_amount", 0))
+        saved_amount = float(goal.get("saved_amount", 0))
     except (TypeError, ValueError):
-        return (False, "total_amount debe ser numérico")
+        return (False, "Monto total  debe ser numérico")
 
-    if saved_amount <= 0:
-        return (False, "total_amount debe ser mayor a 0")
+    if saved_amount < 0:
+        return (False, "Monto a ahorrar no puede ser negativo")
     
-    if not is_valid_date(goal.get("start_date")):
-        return (False, "Fecha de inicio inválida (usar dd/mm/yyyy)")
+    if saved_amount >= total_amount:
+        return (False, "Monto total debe ser mayor al monto ya ahorrado")
     
-    if not is_valid_date(goal.get("end_date")):
-        return (False, "Fecha de fin inválida (usar dd/mm/yyyy)")
-
-    # TODO: validar que start sea menor a end
+    end_date_str = goal.get("end_date")
+    if not is_valid_goal_date(end_date_str):
+        return (False, "Fecha de fin inválida (usar dd/mm/yyyy, debe ser futura y en un rango razonable)")
 
     if not goal.get("name").strip():
-        return (False, "El campo name no puede estar vacío")
+        return (False, "El campo nombre no puede estar vacío")
     
     if goal.get("category") not in goal_categories:
         return (False, "Categoría inválida")
@@ -186,6 +224,8 @@ def validate_goal(goal, goal_categories, goals_status, users):
 #TODAS LAS FUNCIONES 
 __all__=[
     "is_valid_date",
+    "is_past_or_today",
+    "is_valid_goal_date",
     "validate_expense",
     "validate_income",
     "validate_user",

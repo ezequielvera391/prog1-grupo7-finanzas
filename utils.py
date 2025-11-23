@@ -99,6 +99,16 @@ def input_int(mensaje):
             value = input(mensaje).strip()
     return int_value
 
+def input_validation_age():
+    age = input_int("Ingrese edad : ")  
+    is_valid_age = False
+    while not is_valid_age:
+        if age >=16 and age <=80:
+            is_valid_age = True
+        else: 
+            print("La edad debe ser mayor o igual a 16 o menor o igual a 80")
+            age = input_int("ingrese edad nuevamente : ")
+    return age , is_valid_age
 
 def choose_category(categories):
     """
@@ -188,6 +198,7 @@ __all__ = [
     "input_non_empty",
     "input_date",
     "input_int",
+    "input_validation_age",
     "choose_category",
     "input_period",
     "convert_to_tuple",
