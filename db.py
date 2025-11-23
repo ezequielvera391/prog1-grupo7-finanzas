@@ -238,6 +238,14 @@ def incomes_insert(income):
 
     return (True, income_final)
 
+def incomes_id_is_valid(income_id):
+    # Buscar índice del registro a actualizar antes de pedir datos nuevos
+    index = _find_row_index(INCOMES_FILE, income_id)
+    if index is None:
+        print(f"No existe ingreso con id {income_id}. Por favor intentelo nuevamente.")
+        return False
+    return True
+
 def incomes_update(income):
     '''
     Recibe income de tipo dict.
@@ -256,8 +264,8 @@ def incomes_update(income):
 
     # Buscar índice del registro a actualizar
     index = _find_row_index(INCOMES_FILE, income_id)
-    if index is None:
-        return (False, f"no existe ingreso con id {income_id}")
+    #if index is None:
+    #    return (False, f"no existe ingreso con id {income_id}")
 
     users = read_collection(USERS_FILE)
     valid, msg = validate_income(income, income_categories, users)
@@ -340,6 +348,14 @@ def expenses_insert(expense):
 
     return (True, expense_final)
 
+def expenses_id_is_valid(expense_id):
+    # Buscar índice del registro a actualizar antes de pedir datos nuevos
+    index = _find_row_index(EXPENSES_FILE, expense_id)
+    if index is None:
+        print(f"No existe egreso con id {expense_id}. Por favor intentelo nuevamente.")
+        return False
+    return True
+
 def expenses_update(expense):
     '''
     Recibe expense de tipo dict.
@@ -362,8 +378,8 @@ def expenses_update(expense):
         return (False, "no hay registros en expenses.json")
 
     index = _find_row_index(EXPENSES_FILE, expense_id)
-    if index is None:
-        return (False, f"no existe egreso con id {expense_id}")
+    #if index is None:
+    #    return (False, f"no existe egreso con id {expense_id}")
 
     # Validar las reglas de negocio antes de reemplazar
     users = read_collection(USERS_FILE)
@@ -459,6 +475,14 @@ def goals_insert(goal):
 
     return (True, goal_final)
 
+def goals_id_is_valid(goal_id):
+    # Buscar índice del registro a actualizar antes de pedir datos nuevos
+    index = _find_row_index(GOALS_FILE, goal_id)
+    if index is None:
+        print(f"No existe objetivo con id {goal_id}. Por favor intentelo nuevamente.")
+        return False
+    return True
+
 def goals_update(goal):
     '''
     Recibe goal de tipo dict.
@@ -483,8 +507,8 @@ def goals_update(goal):
         return (False, "no hay registros en goals.json")
 
     index = _find_row_index(GOALS_FILE, goal_id)
-    if index is None:
-        return (False, f"no existe egreso con id {goal_id}")
+    #if index is None:
+    #    return (False, f"no existe egreso con id {goal_id}")
 
     # Validar las reglas de negocio antes de reemplazar
     users = read_collection(USERS_FILE)
@@ -525,12 +549,12 @@ def goals_delete(goal_id):
 
     # Si la cantidad no cambió, no existía
     if len(updated_rows) == len(rows):
-        return (False, "La meta que intenta borrar no existe")
+        return (False, "El objetivo de ahorro que intenta borrar no existe")
 
     # Guardar cambios
     _write_collection(GOALS_FILE, updated_rows)
 
-    return (True, "La meta fue borrada satisfactoriamente")
+    return (True, "El objetivo de ahorro fue borrado satisfactoriamente")
     
 def goals_by_user(username):
     '''
@@ -577,12 +601,14 @@ __all__ = [
 
     # Incomes
     "incomes_insert",
+    "incomes_id_is_valid",
     "incomes_update",
     "incomes_delete",
     "incomes_by_user",
 
     # Expenses
     "expenses_insert",
+    "expenses_id_is_valid",
     "expenses_update",
     "expenses_delete",
     "expenses_by_user",
@@ -596,6 +622,7 @@ __all__ = [
 
     # Goals
     "goals_insert",
+    "goals_id_is_valid",
     "goals_update",
     "goals_delete",
     "goals_by_user",

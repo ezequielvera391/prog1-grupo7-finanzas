@@ -187,21 +187,21 @@ def validate_goal(goal, goal_categories, goals_status, users):
     try:
         total_amount = float(goal.get("total_amount", 0))
     except (TypeError, ValueError):
-        return (False, "Nonto total debe ser numérico")
+        return (False, "Monto total debe ser numérico")
 
     if total_amount <= 0:
-        return (False, "Nonto total  debe ser mayor a 0")
+        return (False, "Monto total  debe ser mayor a 0")
     
     try:
         saved_amount = float(goal.get("saved_amount", 0))
     except (TypeError, ValueError):
-        return (False, "Nonto total  debe ser numérico")
+        return (False, "Monto total  debe ser numérico")
 
     if saved_amount < 0:
         return (False, "Monto a ahorrar no puede ser negativo")
     
     if saved_amount >= total_amount:
-        return (False, "Nonto total debe ser mayor al monto ya ahorrado")
+        return (False, "Monto total debe ser mayor al monto ya ahorrado")
     
     end_date_str = goal.get("end_date")
     if not is_valid_goal_date(end_date_str):

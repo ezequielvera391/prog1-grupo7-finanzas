@@ -3,10 +3,12 @@ from db import (
     income_categories, 
     expense_categories,
     incomes_insert, 
+    incomes_id_is_valid,
     incomes_update, 
     incomes_delete, 
     incomes_by_user, 
-    expenses_insert, 
+    expenses_insert,
+    expenses_id_is_valid,
     expenses_update, 
     expenses_delete, 
     expenses_by_user,
@@ -14,6 +16,7 @@ from db import (
     login_check,
     users_find_by_name,
     goals_insert,
+    goals_id_is_valid,
     goals_update,
     goals_delete,
     goals_by_user,
@@ -161,7 +164,7 @@ def getExpensesByUser(username):
 # ABM OBJETIVOS DE AHORRO
 def insertGoals(goal):
     '''
-    Este método recibe un egreso de tipo dict
+    Este método recibe un objetivo de ahorro de tipo dict
     y lo inserta en la base de datos a través de una función de db.py.
     Devuelve True en caso de éxito, False en caso de error.
     '''
@@ -282,7 +285,13 @@ def incomes_menu(current_username):
         # Actualizar
         elif selected == 2:
             income_id = input_non_empty("ID del ingreso a actualizar: ")
-            amount = input_float("Nuevo ingreso: ")
+            income_id_validated = incomes_id_is_valid(income_id)
+
+            while not income_id_validated:
+                income_id = input_non_empty("ID del ingreso a actualizar: ")
+                income_id_validated = incomes_id_is_valid(income_id)
+            
+            amount = input_float("Ingrese el monto del nuevo ingreso: ")
             category = choose_category(income_categories)
             date = input_date("Nueva fecha (dd/mm/yyyy): ")
             income = {
@@ -292,8 +301,10 @@ def incomes_menu(current_username):
                 "date": date,
                 "user": current_username
             }
+
             ok, message = updateIncome(income)
             print("Ingreso actualizado." if ok else message)
+
         # Eliminar
         elif selected == 3:
             income_id = input_non_empty("ID del income a eliminar: ")
@@ -343,7 +354,13 @@ def expenses_menu(current_username):
         # Actualizar
         elif selected == 2:
             expense_id = input_non_empty("ID del egreso a actualizar: ")
-            amount = input_float("Nuevo monto: ")
+            expense_id_validated = expenses_id_is_valid(expense_id)
+
+            while not expense_id_validated:
+                expense_id = input_non_empty("ID del egreso a actualizar: ")
+                expense_id_validated = expenses_id_is_valid(expense_id)
+
+            amount = input_float("Ingrese el monto del nuevo egreso: ")
             category = choose_category(expense_categories)
             date = input_date("Nueva fecha (dd/mm/yyyy): ")
             expense = {
@@ -468,6 +485,12 @@ def goals_menu(current_username):
         # Modificar un objetivo de ahorro
         elif selected == 2:
             goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+            goal_id_validated = goals_id_is_valid(goal_id)
+
+            while not goal_id_validated:
+                goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
+                goal_id_validated = goals_id_is_valid(goal_id)
+
             goal_name = input_non_empty("Ingrese el nombre del objetivo: ")
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
@@ -487,10 +510,10 @@ def goals_menu(current_username):
             }
 
             ok, message = updateGoals(goal)
-            print("Ingreso actualizado." if ok else message)
+            print("Objetivo de ahorro actualizado." if ok else message)
         # Eliminar Objetivo de ahorro
         elif selected == 3:
-            goal_id = input_non_empty("ID del egreso a eliminar: ")
+            goal_id = input_non_empty("ID del objetivo a eliminar: ")
             ok, message = deleteGoals({"id": goal_id})
             print("Objetivo de ahorro eliminado." if ok else message)
         # Listar Objetivo de ahorro
