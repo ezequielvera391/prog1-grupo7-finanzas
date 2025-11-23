@@ -8,5 +8,35 @@
     "end_date": "12/07/2026",
     "status": "Iniciado",
     "user": "admin"
+  },
+  {
+    "id": "2",
+    "category": "Vivienda",
+    "total_amount": 1000000.0,
+    "saved_amount": 1000.0,
+    "start_date": "20/03/2025",
+    "end_date": "20/11/2025",
+    "status": "Iniciado",
+    "user": "admin"
+  },
+  {
+    "id": "3",
+    "category": "Vivienda",
+    "total_amount": 1000000.0,
+    "saved_amount": 1000.0,
+    "start_date": "20/10/2025",
+    "end_date": "10/11/2025",
+    "status": "Iniciado",
+    "user": "admin"
+  },
+  {
+    "id": "4",
+    "category": "Vivienda",
+    "total_amount": 20200.0,
+    "saved_amount": 20.0,
+    "start_date": "10/10/2025",
+    "end_date": "10/11/2025",
+    "status": "Iniciado",
+    "user": "admin"
   }
 ]

@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "1",
+    "amount": 2222.0,
+    "category": "Otros",
+    "date": "10/11/2024",
+    "user": "admin"
+  },
+  {
+    "id": "2",
+    "amount": 2299292.0,
+    "category": "Salario",
+    "date": "10/11/2025",
+    "user": "admin"
+  }
+]
