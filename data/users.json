@@ -46,5 +46,13 @@
     "age": 16,
     "genre": "M",
     "role": "user"
+  },
+  {
+    "id": "7",
+    "name": "pepe",
+    "password": "123456",
+    "age": 18,
+    "genre": "F",
+    "role": "user"
   }
 ]

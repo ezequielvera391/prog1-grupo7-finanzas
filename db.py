@@ -439,6 +439,7 @@ def goals_insert(goal):
 
     goal_final = {
         "id": new_id,
+        "name": goal.get("name"),
         "category": goal.get("category"),
         "total_amount": goal.get("total_amount"),
         "saved_amount": goal.get("saved_amount"),
@@ -490,6 +491,7 @@ def goals_update(goal):
     # Actualizar registro existente
     rows[index] = {
         "id": str(goal_id),
+        "name": goal.get("name"),
         "category": goal.get("category"),
         "total_amount": goal.get("total_amount"),
         "saved_amount": goal.get("saved_amount"),

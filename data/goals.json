@@ -1,11 +1,23 @@
 [
   {
     "id": "1",
+    "name": "fede",
     "category": "Viaje",
-    "total_amount": 1000.0,
-    "saved_amount": 555.0,
-    "start_date": "12/06/2025",
-    "end_date": "12/07/2026",
+    "total_amount": 10000.0,
+    "saved_amount": 1000.0,
+    "start_date": "12/12/2025",
+    "end_date": "21/12/2025",
+    "status": "Iniciado",
+    "user": "admin"
+  },
+  {
+    "id": "2",
+    "name": "mascotas",
+    "category": "Otros",
+    "total_amount": 2000.0,
+    "saved_amount": 100.0,
+    "start_date": "21/12/2025",
+    "end_date": "29/12/2025",
     "status": "Iniciado",
     "user": "admin"
   }

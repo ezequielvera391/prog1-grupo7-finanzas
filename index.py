@@ -532,7 +532,7 @@ def goals_menu(current_username):
                 print("\nObjetivos de ahorro del usuario actual:")
                 for i in range(len(items)):
                     it = items[i]
-                    print(f"- [{it['id']}] {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
+                    print(f"- [{it['id']}] | {it['name']} | {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
         # Volver al menú principal
         elif selected == 5:
             print("Volviendo al menú principal...")
