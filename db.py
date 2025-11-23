@@ -12,7 +12,8 @@ from validations import(
 
 
 # ----- Rutas y constantes -----
-DB_DIR = "./data"
+CURRENT_PATH = os.path.dirname(__file__)
+DB_DIR = os.path.join(CURRENT_PATH, "data")
 USERS_FILE = os.path.join(DB_DIR, "users.json")
 INCOMES_FILE = os.path.join(DB_DIR, "incomes.json")
 EXPENSES_FILE = os.path.join(DB_DIR, "expenses.json")

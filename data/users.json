@@ -6,53 +6,5 @@
     "age": 20,
     "genre": "M",
     "role": "admin"
-  },
-  {
-    "id": "2",
-    "name": "dar",
-    "password": "123456",
-    "age": 1,
-    "genre": "F",
-    "role": "user"
-  },
-  {
-    "id": "3",
-    "name": "val",
-    "password": "123456",
-    "age": 12,
-    "genre": "F",
-    "role": "user"
-  },
-  {
-    "id": "4",
-    "name": "pe",
-    "password": "123456",
-    "age": 120,
-    "genre": "F",
-    "role": "user"
-  },
-  {
-    "id": "5",
-    "name": "tete",
-    "password": "123456",
-    "age": true,
-    "genre": "M",
-    "role": "user"
-  },
-  {
-    "id": "6",
-    "name": "pedro",
-    "password": "123456",
-    "age": 16,
-    "genre": "M",
-    "role": "user"
-  },
-  {
-    "id": "7",
-    "name": "pepe",
-    "password": "123456",
-    "age": 18,
-    "genre": "F",
-    "role": "user"
   }
 ]
