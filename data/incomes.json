@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "1",
+    "amount": 100.0,
+    "category": "Salario",
+    "date": "12/12/2025",
+    "user": "val"
+  },
+  {
+    "id": "2",
+    "amount": 100.0,
+    "category": "Salario",
+    "date": "12/12/2025",
+    "user": "tete"
+  }
+]
