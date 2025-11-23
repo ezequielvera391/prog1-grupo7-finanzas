@@ -25,6 +25,7 @@ from utils import(
     input_non_empty,
     input_date,
     input_int,
+    input_validation_age,
     choose_category,
     input_period,
     convert_to_tuple,
@@ -563,15 +564,16 @@ def main():
             password2 = input_password("Confirme contraseña: ")
 
         # Edad y genero
-        age = input_int("Ingrese edad: ")
-        genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
-        genre = ""
-        if genre_option == 1:
-            genre = "M"
-        elif genre_option == 2:
-            genre = "F"
-        else:
-            genre = "X"
+        age, validation_age = input_validation_age()
+        if validation_age:
+            genre_option = get_menu_option("Ingrese genero (masculino/femenino/otro): ", ["masculino", "femenino", "otro"])
+            genre = ""
+            if genre_option == 1:
+                genre = "M"
+            elif genre_option == 2:
+                genre = "F"
+            else:
+                genre = "X"
         # Intentar registrar usuario
         ok = register_user(username, password, password2, age, genre)
         if ok:
