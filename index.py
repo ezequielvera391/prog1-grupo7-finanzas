@@ -20,6 +20,7 @@ from db import (
     goals_update,
     goals_delete,
     goals_by_user,
+    load_sample_data
 )
 #utils
 from utils import(
@@ -36,7 +37,8 @@ from utils import(
 from service import (
     calculate_monthly_savings,
     percent_change_in_savings, 
-    average_expense_by_category
+    average_expense_by_category,
+    build_dashboard_metrics
 
 )
 import getpass
@@ -394,11 +396,100 @@ def expenses_menu(current_username):
             print("Volviendo al menú principal...")
 
 
+def show_dashboard_plain(username):
+    metrics = build_dashboard_metrics(username)
+
+    month = metrics["month"]
+    year = metrics["year"]
+    prev_month = metrics["prev_month"]
+    prev_year = metrics["prev_year"]
+
+    total_in_all = metrics["total_in_all"]
+    total_out_all = metrics["total_out_all"]
+    savings_all = metrics["savings_all"]
+
+    total_in = metrics["total_in"]
+    total_out = metrics["total_out"]
+    savings_current = metrics["savings_current"]
+    savings_prev = metrics["savings_prev"]
+    change_pct = metrics["change_pct"]
+    goals_info = metrics["goals"]
+    dist = metrics["expenses_distribution"]
+
+    # Colores ANSI
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    CYAN = "\033[96m"
+    YELLOW = "\033[93m"
+    RESET = "\033[0m"
+
+    print("\n" + "=" * 60)
+    print(f"{CYAN}DASHBOARD FINANCIERO - Usuario: {username}{RESET}")
+    print("=" * 60)
+
+    print(f"\n{YELLOW}Resumen histórico:{RESET}")
+    if total_in_all == 0.0 and total_out_all == 0.0:
+        print("- No hay datos de ingresos ni egresos aún.")
+    else:
+        print(f"- Total ingresado: {GREEN}${total_in_all:.2f}{RESET}")
+        print(f"- Total egresado:  {RED}${total_out_all:.2f}{RESET}")
+        color_saving_all = GREEN if savings_all >= 0 else RED
+        print(f"- Ahorro histórico: {color_saving_all}${savings_all:.2f}{RESET}")
+
+    print(f"\n{YELLOW}Resumen mes actual {month}/{year}:{RESET}")
+    if total_in == 0.0 and total_out == 0.0:
+        print("- No hay movimientos en el mes actual.")
+    else:
+        print(f"- Ingresos:  {GREEN}${total_in:.2f}{RESET}")
+        print(f"- Egresos:   {RED}${total_out:.2f}{RESET}")
+        color_saving = GREEN if savings_current >= 0 else RED
+        print(f"- Ahorro:    {color_saving}${savings_current:.2f}{RESET}")
+
+    print(f"\n{YELLOW}Comparación vs. {prev_month}/{prev_year}:{RESET}")
+    if savings_prev == 0.0 and savings_current == 0.0:
+        print("- No hay datos suficientes para comparar (ambos meses sin ahorro).")
+    else:
+        print(f"- Ahorro mes anterior: ${savings_prev:.2f}")
+        if change_pct is None:
+            print("- Cambio porcentual: no se puede calcular (ahorro anterior = 0)")
+        else:
+            sign_color = GREEN if change_pct >= 0 else RED
+            print(f"- Cambio porcentual: {sign_color}{change_pct:.2f}%{RESET}")
+
+    print(f"\n{YELLOW}Metas de ahorro:{RESET}")
+    if goals_info["total_goals"] == 0:
+        print("- No hay objetivos de ahorro registrados.")
+    else:
+        print(f"- Total metas: {goals_info['total_goals']}")
+        print(f"- Completadas: {goals_info['goals_completed']}")
+        print(f"- En progreso: {goals_info['goals_in_progress']}")
+        print(f"- No iniciadas: {goals_info['goals_not_started']}")
+        print("\n  Detalle:")
+        for g in goals_info["details"]:
+            color_prog = GREEN if g["progress_pct"] >= 100 else CYAN
+            print(
+                f"  · [{g['id']}] {g['name']} "
+                f"({g['category']}) -> {color_prog}{g['progress_pct']:.1f}%{RESET} "
+                f"| meta: ${g['total_amount']:.2f} | ahorrado: ${g['saved_amount']:.2f} "
+                f"| estado: {g['status']}"
+            )
+
+    print(f"\n{YELLOW}Distribución de gastos por categoría ({month}/{year}):{RESET}")
+    if not dist:
+        print("- No hay egresos registrados para el mes actual.")
+    else:
+        for categoria, porcentaje in dist.items():
+            print(f"  · {categoria}: {porcentaje:.2f}%")
+
+    print("\n" + "=" * 60 + "\n")
+
+
 def metrics_menu(current_username):
     options = [
+        "Ver métricas generales",
         "Calcular ahorro mensual",
         "Comparar ahorro entre dos meses",
-        "Porcentaje de gasto por categoría",         
+        "Porcentaje de gasto por categoría",
         "Volver"
     ]
 
@@ -406,16 +497,20 @@ def metrics_menu(current_username):
     while selected != len(options):
         selected = get_menu_option("Menú de Métricas", options)
 
-        # Calcular ahorro mensual
+        # 1 - Dashboard general
         if selected == 1:
+            show_dashboard_plain(current_username)
+
+        # 2 - Calcular ahorro mensual
+        elif selected == 2:
             print("\n--- Calcular Ahorro Mensual ---")
             month, year = input_period("Ingrese el período a calcular:")
             savings = calculate_monthly_savings(current_username, month, year)
             savings_formatted = int(savings * 100) / 100.0
             print(f"\nEl ahorro para el mes {month} en el año {year} fue de: ${savings_formatted}")
 
-        # Comparar ahorro
-        elif selected == 2:    
+        # 3 - Comparar ahorro
+        elif selected == 3:
             print("\n--- Comparar Ahorro Entre Dos Meses ---")
             month1, year1 = input_period("-- Primer Período --")
             month2, year2 = input_period("\n-- Segundo Período --")
@@ -433,22 +528,21 @@ def metrics_menu(current_username):
                 else:
                     print("\nNo hubo cambios en el ahorro entre los dos períodos.")
 
-        elif selected == 3:
+        # 4 - Porcentaje de gasto por categoría
+        elif selected == 4:
             print("\n--- Porcentaje de Gasto por Categoría ---")
             month, year = input_period("Ingrese el período a analizar:")
             percentages = average_expense_by_category(current_username, month, year)
-    
+
             if not percentages:
                 print(f"\nNo hay egresos para el mes {month}/{year}.")
             else:
                 print(f"\nPorcentaje de gasto por categoría en la fecha: {month}/{year}:")
                 for categoria, porcentaje in percentages.items():
                     print(f"- {categoria}: {porcentaje:.2f}%")
-    
 
-        elif selected == 4:
+        elif selected == 5:
             print("Volviendo al menú principal...")
-
 def goals_menu(current_username):
     options = [
         "Agregar objetivo de ahorro",
@@ -615,4 +709,6 @@ def main():
 
 #### INICIO DE PROGRAMA
 ensure_db_files()
+# para pruebas comentar ensure_db_files() y dscomentar load_sample_data()
+# load_sample_data() 
 main()
