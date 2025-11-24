@@ -584,6 +584,129 @@ def ensure_db_files():
             with open(path, "w", encoding="utf-8") as file:
                 json.dump([], file, ensure_ascii=False)
 
+def load_sample_data():
+    """
+    Crea datos de prueba para el usuario admin / 1234.
+    Se recomienda ejecutarla una sola vez (o limpiar la base antes de re-ejecutar).
+    """
+    ensure_db_files()
+
+    _, existing_admin = users_find_by_name("admin")
+    if not existing_admin:
+        new_admin = {
+            "name": "admin",
+            "password": "1234",
+            "age": 30,
+            "genre": "X",
+            "role": "admin"
+        }
+        ok = users_insert(new_admin)
+        if ok:
+            print("Usuario 'admin' creado para datos de prueba.")
+        else:
+            print("No se pudo crear el usuario 'admin' (puede que ya exista).")
+    else:
+        print("Usuario 'admin' ya existe, se usarán sus datos para las pruebas.")
+
+    username = "admin"
+
+    incomes_data = [
+        {"amount": 300000.0, "category": income_categories[0], "date": "01/09/2025"},
+        {"amount": 50000.0,  "category": income_categories[-1], "date": "15/09/2025"},
+        {"amount": 310000.0, "category": income_categories[0], "date": "01/10/2025"},
+        {"amount": 60000.0,  "category": income_categories[-1], "date": "15/10/2025"},
+        {"amount": 320000.0, "category": income_categories[0], "date": "01/11/2025"},
+        {"amount": 70000.0,  "category": income_categories[-1], "date": "15/11/2025"},
+    ]
+
+    for inc in incomes_data:
+        income = {
+            "amount": inc["amount"],
+            "category": inc["category"],
+            "date": inc["date"],
+            "user": username,
+        }
+        ok, msg = incomes_insert(income)
+        if not ok:
+            print(f"Error al insertar ingreso de prueba {income}: {msg}")
+
+    expenses_data = [
+        {"amount": 120000.0, "category_index": 0, "date": "05/09/2025"},
+        {"amount": 50000.0,  "category_index": 1, "date": "12/09/2025"},
+        {"amount": 125000.0, "category_index": 0, "date": "05/10/2025"},
+        {"amount": 55000.0,  "category_index": 1, "date": "12/10/2025"},
+        {"amount": 30000.0,  "category_index": 2, "date": "20/10/2025"},
+        {"amount": 130000.0, "category_index": 0, "date": "05/11/2025"},
+        {"amount": 60000.0,  "category_index": 1, "date": "12/11/2025"},
+        {"amount": 35000.0,  "category_index": 2, "date": "20/11/2025"},
+    ]
+
+    for exp in expenses_data:
+        idx = exp["category_index"]
+        if idx >= len(expense_categories):
+            idx = 0
+        expense = {
+            "amount": exp["amount"],
+            "category": expense_categories[idx],
+            "date": exp["date"],
+            "user": username,
+        }
+        ok, msg = expenses_insert(expense)
+        if not ok:
+            print(f"Error al insertar egreso de prueba {expense}: {msg}")
+
+    today_str = datetime.today().strftime("%d/%m/%Y")
+
+    goals_data = [
+        # Meta 1: iniciada (0% de progreso)
+        {
+            "name": "Viaje a la costa",
+            "category": "Viaje",
+            "total_amount": 300000.0,
+            "saved_amount": 0.0,
+            "start_date": today_str,
+            "end_date": "01/03/2026",
+            "status": "Iniciado",
+        },
+        # Meta 2: en proceso (~40% de progreso)
+        {
+            "name": "Fondo de emergencia",
+            "category": "Otros",
+            "total_amount": 200000.0,
+            "saved_amount": 80000.0,
+            "start_date": today_str,
+            "end_date": "01/09/2026",
+            "status": "En proceso",
+        },
+        # Meta 3: completada (100%+)
+        {
+            "name": "Heladera nueva",
+            "category": "Electrodomesticos",
+            "total_amount": 250000.0,
+            "saved_amount": 250000.0,
+            "start_date": today_str,
+            "end_date": "01/06/2026",
+            "status": "Completado",
+        },
+    ]
+
+    for g in goals_data:
+        goal = {
+            "name": g["name"],
+            "category": g["category"],
+            "total_amount": g["total_amount"],
+            "saved_amount": g["saved_amount"],
+            "start_date": g["start_date"],
+            "end_date": g["end_date"],
+            "status": g["status"],
+            "user": username,
+        }
+        ok, msg = goals_insert(goal)
+        if not ok:
+            print(f"Error al insertar objetivo de ahorro de prueba {goal}: {msg}")
+
+    print("\nDatos de prueba creados para el usuario 'admin' (password: 1234).")
+
 
 ### EXPORTS ### 
 __all__ = [
@@ -628,5 +751,6 @@ __all__ = [
     "goals_by_user",
 
     # Utils / Setup
-    "ensure_db_files"
+    "ensure_db_files",
+    "load_sample_data"
 ]
