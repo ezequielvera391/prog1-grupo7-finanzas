@@ -410,8 +410,6 @@ def _show_dashboard_details(metrics, username):
     total_out_all = metrics["total_out_all"]
     savings_all = metrics["savings_all"]
 
-    total_in = metrics["total_in"]
-    total_out = metrics["total_out"]
     savings_current = metrics["savings_current"]
     savings_prev = metrics["savings_prev"]
     change_pct = metrics["change_pct"]
