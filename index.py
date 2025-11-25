@@ -410,8 +410,6 @@ def _show_dashboard_details(metrics, username):
     total_out_all = metrics["total_out_all"]
     savings_all = metrics["savings_all"]
 
-    total_in = metrics["total_in"]
-    total_out = metrics["total_out"]
     savings_current = metrics["savings_current"]
     savings_prev = metrics["savings_prev"]
     change_pct = metrics["change_pct"]
@@ -788,13 +786,13 @@ def main():
             print("Saliendo...")
 
 #### INICIO DE PROGRAMA
+if __name__ == "__main__":
+    # para pruebas comentar ensure_db_files(), delete_data() y dscomentar load_sample_data()
+    # load_sample_data()
 
-# para pruebas comentar ensure_db_files(), delete_data() y dscomentar load_sample_data()
-# load_sample_data()
+    # Si quiero reestablecer los .json puedo comentar  ensure_db_files(), load_sample_data() y main() y ejecutar solo delete_data()
+    # delete_data()
 
-# Si quiero reestablecer los .json puedo comentar  ensure_db_files(), load_sample_data() y main() y ejecutar solo delete_data()
-# delete_data()
-
-# Para iniciar correctamente dejar descomentada solamente ensure_db_files() y main()
-ensure_db_files()
-main()
+    # Para iniciar correctamente dejar descomentada solamente ensure_db_files() y main()
+    ensure_db_files()
+    main()

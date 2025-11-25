@@ -73,5 +73,5 @@ def test_insert_goal_success():
     """Prueba la inserción exitosa de un objetivo de ahorro."""
     setup_test_database()
     register_user("testuser", "pass123", "pass123", 30, "M")
-    goal = {"name": "Viaje", "category": "Viaje", "total_amount": 500.0, "saved_amount": 50.0, "end_date": "01/01/2025", "status": "Iniciado", "user": "testuser"}
+    goal = {"name": "Viaje", "category": "Viaje", "total_amount": 500.0, "saved_amount": 50.0, "end_date": "01/01/2026", "status": "Iniciado", "user": "testuser"}
     assert insertGoals(goal)[0] == True
