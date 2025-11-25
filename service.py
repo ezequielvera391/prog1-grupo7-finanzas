@@ -3,8 +3,8 @@
 
 """El archivo service.py agrupa las funciones que procesan y analizan los datos. 
     Usa la información de ingresos y egresos que maneja db.py para calcular metricas
- como el ahorro mensual, la variacion del ahorro entre meses y el porcentaje de gastos por categoria.
- """
+    como el ahorro mensual, la variacion del ahorro entre meses y el porcentaje de gastos por categoria.
+"""
 
 
 from datetime import datetime

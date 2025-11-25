@@ -24,14 +24,15 @@ from db import (
 )
 #utils
 from utils import(
-   get_menu_option,
+    get_menu_option,
     input_float,
     input_non_empty,
     input_date,
     input_validation_age,
     choose_category,
     input_period,
-    input_password
+    input_password,
+    COLORS
 )
 #service
 from service import (
@@ -170,13 +171,8 @@ def insertGoals(goal):
     y lo inserta en la base de datos a través de una función de db.py.
     Devuelve True en caso de éxito, False en caso de error.
     '''
-    ok, msg = goals_insert(goal)
-    if not ok:
-        print(f"Error al guardar el objetivo de ahorro: {msg}")
-        return False
-    
-    print("Objetivo de ahorro creado correctamente.")
-    return True
+    ok, message = goals_insert(goal)
+    return ok, message
 
 def updateGoals(goal):
     '''
@@ -396,9 +392,7 @@ def expenses_menu(current_username):
             print("Volviendo al menú principal...")
 
 
-def show_dashboard_plain(username):
-    metrics = build_dashboard_metrics(username)
-
+def _show_dashboard_details(metrics, username):
     month = metrics["month"]
     year = metrics["year"]
     prev_month = metrics["prev_month"]
@@ -416,18 +410,14 @@ def show_dashboard_plain(username):
     goals_info = metrics["goals"]
     dist = metrics["expenses_distribution"]
 
-    # Colores ANSI
-    GREEN = "\033[92m"
-    RED = "\033[91m"
-    CYAN = "\033[96m"
-    YELLOW = "\033[93m"
-    RESET = "\033[0m"
-
+    # Extraer colores del diccionario para un uso más fácil
+    GREEN, RED, BLUE, CYAN, YELLOW, MAGENTA, BOLD, RESET = COLORS.values()
     print("\n" + "=" * 60)
-    print(f"{CYAN}DASHBOARD FINANCIERO - Usuario: {username}{RESET}")
+    print(f"{BOLD}{CYAN}DASHBOARD FINANCIERO - Usuario: {username}{RESET}")
     print("=" * 60)
 
-    print(f"\n{YELLOW}Resumen histórico:{RESET}")
+    # --- Resumen Histórico (Azul) ---
+    print(f"\n{BLUE}{BOLD}Resumen histórico:{RESET}")
     if total_in_all == 0.0 and total_out_all == 0.0:
         print("- No hay datos de ingresos ni egresos aún.")
     else:
@@ -436,16 +426,8 @@ def show_dashboard_plain(username):
         color_saving_all = GREEN if savings_all >= 0 else RED
         print(f"- Ahorro histórico: {color_saving_all}${savings_all:.2f}{RESET}")
 
-    print(f"\n{YELLOW}Resumen mes actual {month}/{year}:{RESET}")
-    if total_in == 0.0 and total_out == 0.0:
-        print("- No hay movimientos en el mes actual.")
-    else:
-        print(f"- Ingresos:  {GREEN}${total_in:.2f}{RESET}")
-        print(f"- Egresos:   {RED}${total_out:.2f}{RESET}")
-        color_saving = GREEN if savings_current >= 0 else RED
-        print(f"- Ahorro:    {color_saving}${savings_current:.2f}{RESET}")
-
-    print(f"\n{YELLOW}Comparación vs. {prev_month}/{prev_year}:{RESET}")
+    # --- Comparación (Cian) ---
+    print(f"\n{CYAN}{BOLD}Comparación vs. mes anterior ({prev_month}/{prev_year}):{RESET}")
     if savings_prev == 0.0 and savings_current == 0.0:
         print("- No hay datos suficientes para comparar (ambos meses sin ahorro).")
     else:
@@ -456,7 +438,8 @@ def show_dashboard_plain(username):
             sign_color = GREEN if change_pct >= 0 else RED
             print(f"- Cambio porcentual: {sign_color}{change_pct:.2f}%{RESET}")
 
-    print(f"\n{YELLOW}Metas de ahorro:{RESET}")
+    # --- Metas de Ahorro (Amarillo) ---
+    print(f"\n{YELLOW}{BOLD}Metas de ahorro:{RESET}")
     if goals_info["total_goals"] == 0:
         print("- No hay objetivos de ahorro registrados.")
     else:
@@ -465,24 +448,68 @@ def show_dashboard_plain(username):
         print(f"- En progreso: {goals_info['goals_in_progress']}")
         print(f"- No iniciadas: {goals_info['goals_not_started']}")
         print("\n  Detalle:")
+
+        # Lógica para la barra de progreso
+        max_bar_width = 20
+        bar_char = "■"
+
         for g in goals_info["details"]:
-            color_prog = GREEN if g["progress_pct"] >= 100 else CYAN
+            progress_pct = g["progress_pct"]
+            num_blocks = int((progress_pct / 100) * max_bar_width)
+            bar_color = GREEN if progress_pct >= 100 else YELLOW
+            bar = bar_color + (bar_char * num_blocks) + RESET
+
             print(
-                f"  · [{g['id']}] {g['name']} "
-                f"({g['category']}) -> {color_prog}{g['progress_pct']:.1f}%{RESET} "
-                f"| meta: ${g['total_amount']:.2f} | ahorrado: ${g['saved_amount']:.2f} "
-                f"| estado: {g['status']}"
+                f"  · {g['name']:<20} ({g['progress_pct']:.1f}%)"
+                f"\n    {bar} | Meta: ${g['total_amount']:.2f} | Ahorrado: ${g['saved_amount']:.2f}"
             )
 
-    print(f"\n{YELLOW}Distribución de gastos por categoría ({month}/{year}):{RESET}")
+    # --- Distribución de Gastos (Azul) ---
+    print(f"\n{BLUE}{BOLD}Distribución de gastos por categoría ({month}/{year}):{RESET}")
     if not dist:
         print("- No hay egresos registrados para el mes actual.")
     else:
+        max_bar_width = 25
+        bar_char = "■"
+
         for categoria, porcentaje in dist.items():
-            print(f"  · {categoria}: {porcentaje:.2f}%")
+            num_blocks = int((porcentaje / 100) * max_bar_width)
+            bar = bar_char * num_blocks
+            print(f"  · {categoria:<15} | {BLUE}{bar}{RESET} {porcentaje:.2f}%")
 
     print("\n" + "=" * 60 + "\n")
 
+def show_dashboard_plain(username):
+    metrics = build_dashboard_metrics(username)
+
+    month = metrics["month"]
+    year = metrics["year"]
+
+    total_in = metrics["total_in"]
+    total_out = metrics["total_out"]
+    savings_current = metrics["savings_current"]
+
+    # Extraer colores del diccionario para un uso más fácil
+    GREEN, RED, BLUE, CYAN, YELLOW, MAGENTA, BOLD, RESET = COLORS.values()
+
+    print("\n" + "=" * 60)
+    print(f"{BOLD}{CYAN}RESUMEN FINANCIERO - Usuario: {username}{RESET}")
+    print("=" * 60)
+
+    # --- Resumen Mes Actual (Magenta) ---
+    print(f"\n{MAGENTA}{BOLD}Resumen mes actual ({month}/{year}):{RESET}")
+    if total_in == 0.0 and total_out == 0.0:
+        print("- No hay movimientos en el mes actual.")
+    else:
+        print(f"- Ingresos:  {GREEN}${total_in:.2f}{RESET}")
+        print(f"- Egresos:   {RED}${total_out:.2f}{RESET}")
+        color_saving = GREEN if savings_current >= 0 else RED
+        print(f"- Ahorro:    {color_saving}${savings_current:.2f}{RESET}")
+
+    # Preguntar al usuario si quiere ver el informe completo
+    choice = get_menu_option("¿Desea ver el informe completo?", ["Sí", "No"])
+    if choice == 1:
+        _show_dashboard_details(metrics, username)
 
 def metrics_menu(current_username):
     options = [
@@ -575,7 +602,8 @@ def goals_menu(current_username):
                 "user": current_username
             }
 
-            ok = insertGoals(goal)
+            ok, message = insertGoals(goal)
+            print("Objetivo de ahorro creado." if ok else message)
         # Modificar un objetivo de ahorro
         elif selected == 2:
             goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
@@ -681,10 +709,13 @@ def main():
         password = getpass.getpass("Ingrese contraseña: ")
         isLogged = login(username, password)
 
-    print("resultado: Auteticacion exitosa")
+    # 1. Mostrar el dashboard justo después de iniciar sesión
+    print("\nCargando tu dashboard...")
+    show_dashboard_plain(username)
     
     # Menú principal
     main_options = [
+        "Ver Dashboard",
         "Ingresos",
         "Egresos",
         "Métricas",
@@ -697,18 +728,20 @@ def main():
         selected = get_menu_option("Menu principal", main_options)
 
         if selected == 1:
-            incomes_menu(username)
+            show_dashboard_plain(username)
         elif selected == 2:
-            expenses_menu(username)
+            incomes_menu(username)
         elif selected == 3:
-            metrics_menu(username)
+            expenses_menu(username)
         elif selected == 4:
-            goals_menu(username)
+            metrics_menu(username)
         elif selected == 5:
+            goals_menu(username)
+        elif selected == 6:
             print("Saliendo...")
 
 #### INICIO DE PROGRAMA
-ensure_db_files()
+#ensure_db_files()
 # para pruebas comentar ensure_db_files() y dscomentar load_sample_data()
-# load_sample_data() 
+load_sample_data() 
 main()

@@ -1,10 +1,24 @@
 #utils
-"""utils.py tiene las funciones que manejan todo lo que el usuario
- escribe por teclado: pedir datos,
- validar fechas, números, textos o mostrar menus."""
+""" 
+    utils.py tiene las funciones que manejan todo lo que el usuario
+    escribe por teclado: pedir datos,
+    validar fechas, números, textos o mostrar menus.
+"""
 
 from validations import is_valid_date
 import getpass
+
+# --- Constantes de Colores ANSI ---
+COLORS = {
+    "GREEN": "\033[92m",
+    "RED": "\033[91m",
+    "BLUE": "\033[94m",
+    "CYAN": "\033[96m",
+    "YELLOW": "\033[93m",
+    "MAGENTA": "\033[95m",
+    "BOLD": "\033[1m",
+    "RESET": "\033[0m"
+}
 
 
 def get_menu_option(message, options):
@@ -180,7 +194,7 @@ def input_password(message="Ingrese contraseña: ", min_length=6):#funcion para 
     Retorna el valor ingresado por el usuario de tipo str
     """
     pwd = getpass.getpass(message).strip()
-   
+
     if not pwd:
         print("La contraseña no puede estar vacia, intente nuevamente.")
         return input_password(message, min_length)
@@ -202,5 +216,6 @@ __all__ = [
     "choose_category",
     "input_period",
     "convert_to_tuple",
-    "input_password"
+    "input_password",
+    "COLORS"
 ]
