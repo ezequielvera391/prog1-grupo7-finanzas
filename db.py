@@ -475,14 +475,6 @@ def goals_insert(goal):
 
     return (True, goal_final)
 
-def goals_id_is_valid(goal_id):
-    # Buscar índice del registro a actualizar antes de pedir datos nuevos
-    index = _find_row_index(GOALS_FILE, goal_id)
-    if index is None:
-        print(f"No existe objetivo con id {goal_id}. Por favor intentelo nuevamente.")
-        return False
-    return True
-
 def goals_update(goal):
     '''
     Recibe goal de tipo dict.
@@ -745,7 +737,6 @@ __all__ = [
 
     # Goals
     "goals_insert",
-    "goals_id_is_valid",
     "goals_update",
     "goals_delete",
     "goals_by_user",

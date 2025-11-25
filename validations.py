@@ -201,7 +201,7 @@ def validate_goal(goal, goal_categories, goals_status, users):
         return (False, "Monto a ahorrar no puede ser negativo")
     
     if saved_amount > total_amount:
-        return (False, "El monto ahorrado no puede ser mayor al monto total del objetivo.")
+        return (False, "El monto ahorrado no puede superar al monto total del objetivo")
     
     end_date_str = goal.get("end_date")
     if not is_valid_goal_date(end_date_str):

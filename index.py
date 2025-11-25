@@ -16,7 +16,6 @@ from db import (
     login_check,
     users_find_by_name,
     goals_insert,
-    goals_id_is_valid,
     goals_update,
     goals_delete,
     goals_by_user,
@@ -39,8 +38,8 @@ from service import (
     calculate_monthly_savings,
     percent_change_in_savings, 
     average_expense_by_category,
-    build_dashboard_metrics
-
+    build_dashboard_metrics,
+    compute_goal_status
 )
 import getpass
 
@@ -203,6 +202,14 @@ def getGoalsByUser(username):
     Devuelve una lista de goals, si el usuario no existe o no tiene goals devuelve una lista vacia.
     '''
     return goals_by_user(username)
+
+def get_goal_for_user_by_id(username, goal_id):
+    """Devuelve el objetivo de ahorro del usuario con ese id, o None si no existe."""
+    goals = getGoalsByUser(username)
+    for g in goals:
+        if str(g.get("id")) == str(goal_id):
+            return g
+    return None
 
 # AUTH
 
@@ -570,10 +577,12 @@ def metrics_menu(current_username):
 
         elif selected == 5:
             print("Volviendo al menú principal...")
+
 def goals_menu(current_username):
     options = [
         "Agregar objetivo de ahorro",
         "Modificar objetivo de ahorro",
+        "Aportar dinero a un objetivo de ahorro",
         "Eliminar objetivo de ahorro",
         "Listar todos mis objetivo de ahorros",
         "Volver"
@@ -606,26 +615,27 @@ def goals_menu(current_username):
             print("Objetivo de ahorro creado." if ok else message)
         # Modificar un objetivo de ahorro
         elif selected == 2:
-            goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
-            goal_id_validated = goals_id_is_valid(goal_id)
-
-            while not goal_id_validated:
+            goal = None
+            while goal is None:
                 goal_id = input_non_empty("ID del objetivo de ahorro a actualizar: ")
-                goal_id_validated = goals_id_is_valid(goal_id)
-
+                goal = get_goal_for_user_by_id(current_username, goal_id)
+                if goal is None:
+                    print(f"No existe objetivo con id {goal_id} para el usuario actual. Por favor inténtelo nuevamente.")
+            
             goal_name = input_non_empty("Ingrese el nombre del objetivo: ")
             goal_category = choose_category(goal_categories)
             goal_total_amount = input_float("Ingrese el monto del objetivo (meta total): ")
             goal_saved_amount = input_float("Ingrese el monto que desea guardar: ")
             goal_end_date = input_date("Nueve fecha final (dd/mm/yyyy) de su objetivo: ")
-            goal_status = "Iniciado"
-
+            goal_status = compute_goal_status(goal_total_amount, goal_saved_amount)
+            # Recuperar start date para no perderlo
             goal = {
                 "id": goal_id,
                 "name": goal_name,
                 "category": goal_category,
                 "total_amount": goal_total_amount,
                 "saved_amount": goal_saved_amount,
+                "start_date": goal.get("start_date"),
                 "end_date": goal_end_date,
                 "status": goal_status,
                 "user": current_username
@@ -633,13 +643,49 @@ def goals_menu(current_username):
 
             ok, message = updateGoals(goal)
             print("Objetivo de ahorro actualizado." if ok else message)
-        # Eliminar Objetivo de ahorro
+        # Aportar dinero a un objetivo de ahorro
         elif selected == 3:
+            goal = None
+            while goal is None:
+                goal_id = input_non_empty("ID del objetivo al que desea aportar dinero: ")
+                goal = get_goal_for_user_by_id(current_username, goal_id)
+                if goal is None:
+                    print(f"No existe objetivo con id {goal_id} para el usuario actual. Por favor inténtelo nuevamente.")
+
+            aporte = input_float("Ingrese el monto que desea aportar: ")
+            if aporte <= 0:
+                print("El aporte debe ser un valor mayor a 0.")
+            else:
+                total_amount = float(goal.get("total_amount", 0.0))
+                saved_amount = float(goal.get("saved_amount", 0.0))
+
+                new_saved = saved_amount + aporte
+                new_status = compute_goal_status(total_amount, new_saved)
+
+                updated_goal = {
+                    "id": goal.get("id"),
+                    "name": goal.get("name"),
+                    "category": goal.get("category"),
+                    "total_amount": total_amount,
+                    "saved_amount": new_saved,
+                    "start_date": goal.get("start_date"),
+                    "end_date": goal.get("end_date"),
+                    "status": new_status,
+                    "user": current_username
+                }
+
+                ok, message = updateGoals(updated_goal)
+                if ok:
+                    print(f"Aporte registrado. Nuevo monto ahorrado: ${new_saved:.2f}. Estado: {new_status}.")
+                else:
+                    print(message)
+        # Eliminar Objetivo de ahorro
+        elif selected == 4:
             goal_id = input_non_empty("ID del objetivo a eliminar: ")
             ok, message = deleteGoals({"id": goal_id})
             print("Objetivo de ahorro eliminado." if ok else message)
         # Listar Objetivo de ahorro
-        elif selected == 4:
+        elif selected == 5:
             items = getGoalsByUser(current_username)
             if not items:
                 print("No hay objetivos de ahorro para este usuario.")
@@ -649,7 +695,7 @@ def goals_menu(current_username):
                     it = items[i]
                     print(f"- [{it['id']}] | {it['name']} | {it['category']} | {it['total_amount']} | {it['saved_amount']} | {it['start_date']} | {it['end_date']} | {it['status']}")
         # Volver al menú principal
-        elif selected == 5:
+        elif selected == 6:
             print("Volviendo al menú principal...")
 
 def main():
