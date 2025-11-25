@@ -699,6 +699,38 @@ def load_sample_data():
 
     print("\nDatos de prueba creados para el usuario 'admin' (password: 1234).")
 
+def delete_data():
+    """
+    Elimina todos los registros de incomes, expenses y goals.
+    En users.json conserva (o crea) únicamente el usuario admin/1234.
+    """
+    ensure_db_files()
+
+    for path in (INCOMES_FILE, EXPENSES_FILE, GOALS_FILE):
+        _write_collection(path, [])
+
+    users = read_collection(USERS_FILE)
+    admin_user = None
+
+    for row in users:
+        if row.get("name") == "admin" and row.get("password") == "1234":
+            admin_user = row
+            break
+
+    if not admin_user:
+        admin_user = {
+            "id": "1",
+            "name": "admin",
+            "password": "1234",
+            "age": 30,
+            "genre": "X",
+            "role": "admin"
+        }
+    else:
+        admin_user["id"] = "1"
+
+    _write_collection(USERS_FILE, [admin_user])
+    print("Base de datos limpiada. Se mantuvo el usuario 'admin' (password: 1234).")
 
 ### EXPORTS ### 
 __all__ = [
@@ -743,5 +775,6 @@ __all__ = [
 
     # Utils / Setup
     "ensure_db_files",
-    "load_sample_data"
+    "load_sample_data",
+    "delete_data"
 ]
